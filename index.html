@@ -1,1080 +1,1487 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>玉石開開開 - 橫向直播間賭石模擬器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>玉石開開開｜一刀窮一刀富・古風賭石工坊</title>
+    <!-- 引入 Tailwind CSS 與 Google Fonts 古風字體 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 自訂古風玉石工坊視覺樣式與動畫 */
+        :root {
+            --bg-dark: #091510;
+            --panel-bg: rgba(15, 34, 26, 0.88);
+            --gold-primary: #d4af37;
+            --gold-light: #f6e086;
+            --emerald-glow: #10b981;
+        }
 
-    :root {
-      --wood-dark: #2c1e16;
-      --wood-mid: #4a3326;
-      --wood-light: #7c5841;
-      --jade-emerald: #10b981;
-      --jade-deep: #064e3b;
-      --gold-accent: #f59e0b;
-    }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.14) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 8px);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    * {
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+        .font-serif-tc {
+            font-family: 'Noto Serif TC', serif;
+        }
 
-    body {
-      margin: 0;
-      padding: 0;
-      background: #140f0c;
-      color: #f8fafc;
-      font-family: 'Noto Sans TC', sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        /* 金邊玉質面板 */
+        .jade-panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), inset 0 0 20px rgba(16, 185, 129, 0.06);
+            backdrop-filter: blur(10px);
+        }
 
-    .serif-title {
-      font-family: 'Noto Serif TC', serif;
-    }
+        /* 古風立體按鈕 */
+        .btn-gold {
+            background: linear-gradient(135deg, #b8860b 0%, #f3d06b 50%, #996515 100%);
+            color: #1a1100;
+            font-weight: 800;
+            border: 1px solid #fff3b0;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-gold:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 22px rgba(246, 224, 134, 0.65);
+        }
+        .btn-gold:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98);
+        }
+        .btn-gold:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.7);
+        }
 
-    /* 橫向工作室主容器 */
-    #app-shell {
-      width: 100vw;
-      height: 100vh;
-      max-width: 1680px;
-      max-height: 960px;
-      background: radial-gradient(circle at 50% 35%, #3b281e 0%, #1c130e 100%);
-      display: flex;
-      flex-direction: column;
-      border: 1px solid rgba(245, 158, 11, 0.25);
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85);
-      position: relative;
-      overflow: hidden;
-    }
+        .btn-jade {
+            background: linear-gradient(135deg, #065f46 0%, #10b981 50%, #047857 100%);
+            color: #ffffff;
+            border: 1px solid #6ee7b7;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+            transition: all 0.2s ease;
+        }
+        .btn-jade:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 211, 153, 0.6);
+        }
+        .btn-jade:active:not(:disabled) {
+            transform: scale(0.97);
+        }
 
-    /* 木紋切割機台質感 */
-    .workbench-surface {
-      background:
-        radial-gradient(ellipse at center, rgba(255, 237, 213, 0.08) 0%, rgba(0, 0, 0, 0.45) 100%),
-        repeating-linear-gradient(90deg, #5c3d28 0px, #533623 18px, #63422c 36px, #4d3220 54px);
-      box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.75);
-      border: 3px solid #78533a;
-    }
+        /* 畫布容器與手電筒光束 */
+        #workshop-stage {
+            position: relative;
+            touch-action: none;
+        }
 
-    .step-badge {
-      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-    }
+        /* 震動特效 (切石瞬間) */
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-6px, 4px) rotate(-1deg); }
+            40% { transform: translate(6px, -4px) rotate(1deg); }
+            60% { transform: translate(-4px, -3px) rotate(-0.5deg); }
+            80% { transform: translate(4px, 3px) rotate(0.5deg); }
+        }
+        .shake-active {
+            animation: screenShake 0.42s ease-in-out;
+        }
 
-    .step-active {
-      background: linear-gradient(90deg, rgba(16, 185, 129, 0.28), rgba(16, 185, 129, 0.08));
-      border-color: #10b981;
-      transform: translateX(4px);
-    }
+        /* 稀有玉石出貨光芒旋轉 */
+        @keyframes spinRays {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .god-rays {
+            animation: spinRays 14s linear infinite;
+        }
 
-    .step-done {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: rgba(16, 185, 129, 0.35);
-      opacity: 0.75;
-    }
+        /* 浮動動畫 */
+        @keyframes floatStone {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .float-idle {
+            animation: floatStone 3.5s ease-in-out infinite;
+        }
 
-    /* 自訂捲軸 */
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(245, 158, 11, 0.35);
-      border-radius: 999px;
-    }
+        /* 隱藏捲軸但保留滾動功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
-    /* 彈幕動畫 */
-    @keyframes popIn {
-      0% { opacity: 0; transform: translateY(8px) scale(0.96); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .danmaku-item {
-      animation: popIn 0.25s ease-out forwards;
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.35); }
-      50% { box-shadow: 0 0 28px rgba(16, 185, 129, 0.75); }
-    }
-    .glow-btn {
-      animation: pulseGlow 2.2s infinite;
-    }
-
-    /* 手機直式提醒遮罩 */
-    #portrait-warning {
-      display: none;
-    }
-    @media (max-width: 760px) and (orientation: portrait) {
-      #portrait-warning {
-        display: flex;
-      }
-    }
-  </style>
+        /* 印章樣式 */
+        .stamp-badge {
+            border: 2px solid currentColor;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Noto Serif TC', serif;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            transform: rotate(-6deg);
+            display: inline-block;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between">
 
-  <!-- 直式螢幕旋轉提示 -->
-  <div id="portrait-warning" class="fixed inset-0 z-[999] bg-stone-950/95 flex-col items-center justify-center p-6 text-center">
-    <div class="text-5xl mb-4 animate-bounce">📱🔄</div>
-    <h2 class="text-xl font-bold text-amber-400 mb-2">請將裝置轉為橫向遊玩</h2>
-    <p class="text-stone-300 text-sm">《玉石開開開》橫向寬螢幕工作室需要 16:9 橫向視野以獲得最佳切石與套手鐲體驗。</p>
-  </div>
+    <!-- 頂部狀態列：資金、聲望、音效與 GitHub 部署說明 -->
+    <header class="w-full border-b border-amber-500/30 bg-black/50 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <!-- 遊戲標題 -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-900 border border-amber-300 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <span class="text-lg">💎</span>
+                </div>
+                <div>
+                    <h1 class="font-serif-tc text-xl sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200">
+                        玉石開開開
+                    </h1>
+                    <p class="text-[11px] text-emerald-300/80 tracking-widest hidden sm:block">一刀窮・一刀富・古玩賭石工坊</p>
+                </div>
+            </div>
 
-  <div id="app-shell">
-    <!-- 頂部狀態列 -->
-    <header class="h-14 px-5 bg-stone-950/85 border-b border-amber-500/20 flex items-center justify-between shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-200/40">
-          <span class="text-xl">💎</span>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="serif-title text-lg font-black tracking-wider text-amber-300">玉石開開開</h1>
-            <span class="text-[11px] px-2 py-0.5 rounded-full bg-rose-600/90 text-white font-bold flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE 緬北源頭直供
-            </span>
-          </div>
-          <p class="text-[11px] text-stone-400">橫向專業開石工坊 · 一刀窮一刀富</p>
-        </div>
-      </div>
+            <!-- 玩家資產與功能按鈕 -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- 碎銀餘額 -->
+                <div class="flex items-center gap-1.5 bg-emerald-950/90 border border-amber-400/50 px-3 py-1.5 rounded-full shadow-inner">
+                    <span class="text-base">🪙</span>
+                    <span class="text-xs text-amber-200/80 hidden xs:inline">碎銀</span>
+                    <span id="coin-display" class="font-bold text-amber-300 text-base sm:text-lg tabular-nums">500</span>
+                </div>
 
-      <!-- 中央數據儀表 -->
-      <div class="flex items-center gap-4">
-        <div class="px-3.5 py-1.5 rounded-xl bg-stone-900/90 border border-amber-500/30 flex items-center gap-2">
-          <span class="text-amber-400 text-sm">💰 資金</span>
-          <span id="ui-money" class="font-black text-amber-300 text-base tracking-tight">¥ 50,000</span>
-        </div>
-        <div class="px-3.5 py-1.5 rounded-xl bg-stone-900/90 border border-emerald-500/30 flex items-center gap-2">
-          <span class="text-emerald-400 text-sm">🔥 直播熱度</span>
-          <span id="ui-fame" class="font-bold text-emerald-300 text-base">1,280</span>
-        </div>
-        <div class="px-3.5 py-1.5 rounded-xl bg-stone-900/90 border border-sky-500/30 flex items-center gap-2">
-          <span class="text-sky-400 text-sm">🏆 切漲次數</span>
-          <span id="ui-wins" class="font-bold text-sky-300 text-base">0</span>
-        </div>
-      </div>
+                <!-- 救濟金按鈕（破產時閃爍提示） -->
+                <button id="btn-subsidy" onclick="claimSubsidy()" class="hidden px-2.5 py-1.5 rounded-full bg-rose-900/80 hover:bg-rose-800 border border-rose-400 text-rose-100 text-xs font-bold animate-pulse transition" title="盤纏用盡？領取商會救濟金">
+                    🆘 領救濟
+                </button>
 
-      <!-- 右側功能按鈕 -->
-      <div class="flex items-center gap-2.5">
-        <button onclick="openGalleryModal()" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-bold transition flex items-center gap-1.5">
-          <span>🏛️ 多寶閣</span>
-          <span id="ui-gallery-count" class="px-1.5 py-0.2 bg-amber-500/30 rounded text-[11px]">0/12</span>
-        </button>
-        <button onclick="openGithubModal()" class="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-600 text-stone-200 text-xs font-bold transition flex items-center gap-1.5">
-          <span>📦 GitHub 部署</span>
-        </button>
-      </div>
+                <!-- 珍寶閣 (圖鑑) 按鈕 -->
+                <button onclick="openGalleryModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-950/70 hover:bg-amber-900/80 border border-amber-400/40 text-amber-200 text-xs sm:text-sm font-medium transition">
+                    <span>🏛️ 珍寶閣</span>
+                    <span id="gallery-badge" class="bg-amber-500 text-black text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+
+                <!-- 音效開關 -->
+                <button id="btn-sound" onclick="toggleSound()" class="p-2 rounded-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-200 text-sm transition" title="切換音效">
+                    🔊
+                </button>
+
+                <!-- GitHub 部署指南按鈕 -->
+                <button onclick="openGithubModal()" class="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700 border border-slate-500/40 text-slate-200 text-xs transition" title="如何部署到 GitHub Pages">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                </button>
+            </div>
+        </div>
     </header>
 
-    <!-- 主體三欄橫向工作區 -->
-    <main class="flex-1 flex overflow-hidden p-3 gap-3">
-      
-      <!-- 左側欄：原石檔案 + 六步開石標準工序 -->
-      <aside class="w-64 shrink-0 flex flex-col gap-3">
-        <!-- 當前原石卡片 -->
-        <div class="bg-stone-950/75 border border-stone-700/70 rounded-2xl p-3.5">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-xs font-bold text-amber-400/90">📍 當前料子檔案</span>
-            <span id="stone-tag" class="text-[11px] px-2 py-0.5 rounded bg-stone-800 text-stone-300">未選石</span>
-          </div>
-          <h2 id="stone-title" class="serif-title text-base font-bold text-white truncate">請先從公盤挑選原石</h2>
-          <p id="stone-desc" class="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">
-            觀察皮殼砂粒、松花與蟒帶，選一顆最有眼緣的料子上機台！
-          </p>
-          <div class="mt-2.5 pt-2 border-t border-stone-800 flex justify-between text-xs">
-            <span class="text-stone-400">入手成本</span>
-            <span id="stone-cost" class="font-bold text-amber-300">--</span>
-          </div>
-        </div>
+    <!-- 主遊戲區域 -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col lg:flex-row gap-5 items-stretch">
+        
+        <!-- 左側/上方：原石選購攤位 (當尚未選石時突出顯示，選石後可切換) -->
+        <section id="market-section" class="w-full lg:w-5/12 jade-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-amber-500/25 pb-3 mb-4">
+                    <div>
+                        <h2 class="font-serif-tc text-lg sm:text-xl font-bold text-amber-300 flex items-center gap-2">
+                            <span>🪨 緬甸老坑原石攤</span>
+                        </h2>
+                        <p class="text-xs text-emerald-200/70 mt-0.5">觀察皮殼「松花」與「蟒帶」，挑選心儀原石</p>
+                    </div>
+                    <button onclick="refreshMarket()" class="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-900/70 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-200 transition">
+                        🔄 換一批
+                    </button>
+                </div>
 
-        <!-- 六步工序導引 -->
-        <div class="flex-1 bg-stone-950/75 border border-stone-700/70 rounded-2xl p-3.5 flex flex-col overflow-hidden">
-          <div class="text-xs font-bold text-stone-300 mb-2.5 flex items-center justify-between">
-            <span>🛠️ 六步開石標準工序</span>
-            <span id="step-progress-text" class="text-emerald-400">待機中</span>
-          </div>
-          <div id="steps-list" class="flex-1 flex flex-col justify-between gap-1.5 overflow-y-auto pr-0.5">
-            <!-- JS 動態渲染步驟 -->
-          </div>
-        </div>
-      </aside>
-
-      <!-- 中央欄：超大互動切石機台畫布 + 底部工具控制列 -->
-      <section class="flex-1 flex flex-col gap-2.5 min-w-0">
-        <!-- 畫布外框 -->
-        <div class="relative flex-1 workbench-surface rounded-2xl overflow-hidden flex items-center justify-center">
-          <canvas id="gameCanvas" class="w-full h-full block cursor-crosshair"></canvas>
-
-          <!-- 頂部浮動操作指引條 -->
-          <div id="canvas-guide-banner" class="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-stone-950/85 border border-amber-400/40 text-xs font-bold text-amber-200 shadow-lg pointer-events-none flex items-center gap-2 whitespace-nowrap">
-            <span id="guide-icon">🪨</span>
-            <span id="guide-text">歡迎來到直播間！請點擊下方「前往公盤選石」挑選翡翠原石</span>
-          </div>
-
-          <!-- 進度條（沖水 / 擦窗時顯示） -->
-          <div id="action-progress-wrap" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 w-72 bg-stone-950/90 border border-stone-700 rounded-full p-1.5 shadow-xl">
-            <div class="flex justify-between text-[11px] px-2 mb-1 font-bold">
-              <span id="progress-label" class="text-emerald-300">處理進度</span>
-              <span id="progress-pct" class="text-white">0%</span>
+                <!-- 三種等級原石卡片列表 -->
+                <div id="stone-cards-container" class="space-y-3">
+                    <!-- 由 JS 動態生成三顆特色原石 -->
+                </div>
             </div>
-            <div class="w-full h-2 bg-stone-800 rounded-full overflow-hidden">
-              <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-75" style="width: 0%"></div>
+
+            <!-- 賭石行話小貼士 -->
+            <div class="mt-4 pt-3 border-t border-emerald-500/20 text-xs text-emerald-200/75 bg-black/30 rounded-xl p-3">
+                <p class="font-bold text-amber-300/90 mb-1">📜 老師傅口訣：</p>
+                <p id="master-tip" class="leading-relaxed">「寧買一條線，不買一大片。皮殼起綠點稱為『松花』，往往代表內部有綠！」</p>
             </div>
-          </div>
+        </section>
 
-          <!-- 手鐲圈口控制器（畫手鐲階段顯示） -->
-          <div id="bangle-hud" class="hidden absolute top-3 right-3 bg-stone-950/90 border border-emerald-500/40 rounded-xl p-3 text-xs shadow-xl w-56">
-            <div class="font-bold text-emerald-300 mb-1.5 flex justify-between">
-              <span>⭕ 手鐲套圈設計</span>
-              <span id="bangle-count-badge" class="text-amber-300">0 / 3 條</span>
+        <!-- 右側/下方：解石工作台 (切石、打燈、擦石開窗) -->
+        <section id="workshop-panel" class="w-full lg:w-7/12 jade-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- 工作台頂部狀態與工具切換 -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/25 pb-3 mb-3 z-10">
+                <div>
+                    <h2 id="workshop-title" class="font-serif-tc text-lg sm:text-xl font-bold text-emerald-300">
+                        ⚒️ 解石工坊
+                    </h2>
+                    <p id="workshop-subtitle" class="text-xs text-slate-300 mt-0.5">請先從左側原石攤挑選一顆原石開切</p>
+                </div>
+
+                <!-- 互動工具列 (選石後啟用) -->
+                <div id="tool-bar" class="hidden flex items-center gap-1.5 sm:gap-2">
+                    <button id="tool-flashlight" onclick="setTool('flashlight')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-1 bg-emerald-600 border-emerald-300 text-white shadow-lg shadow-emerald-500/30">
+                        🔦 打燈看水頭
+                    </button>
+                    <button id="tool-rub" onclick="setTool('rub')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-1 bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700">
+                        🧽 擦石開窗
+                    </button>
+                </div>
             </div>
-            <div class="text-stone-300 mb-2 flex justify-between items-center">
-              <span>當前圈口：</span>
-              <span id="bangle-size-label" class="font-bold text-white">56 mm (黃金正圈)</span>
+
+            <!-- 中央畫布互動區 -->
+            <div id="workshop-stage" class="relative flex-1 min-h-[300px] sm:min-h-[340px] rounded-xl bg-gradient-to-b from-[#07110d] to-[#0d1f18] border border-emerald-500/20 flex items-center justify-center overflow-hidden my-1">
+                
+                <!-- 閒置提示畫面 -->
+                <div id="empty-state" class="text-center p-6">
+                    <div class="text-5xl mb-3 opacity-80 float-idle">🪨</div>
+                    <p class="font-serif-tc text-lg text-amber-200/90 font-bold">解石機已就緒</p>
+                    <p class="text-xs text-emerald-200/60 mt-1 max-w-xs mx-auto">挑選原石後，可先用強光手電筒「打燈」觀察水頭表現，再決定「擦石開窗」或「一刀切開」！</p>
+                </div>
+
+                <!-- 互動切石 Canvas -->
+                <canvas id="jade-canvas" class="hidden w-full h-full cursor-crosshair"></canvas>
+
+                <!-- 磨皮進度條 (使用擦石工具時顯示) -->
+                <div id="rub-progress-box" class="hidden absolute top-3 left-3 right-3 pointer-events-none">
+                    <div class="flex justify-between text-[11px] text-amber-200 font-bold mb-1 drop-shadow">
+                        <span>開窗面積進度 (按住滑動磨去石皮)</span>
+                        <span id="rub-percent">0%</span>
+                    </div>
+                    <div class="w-full h-2 bg-black/70 rounded-full overflow-hidden border border-amber-400/30">
+                        <div id="rub-bar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-300 transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 打燈提示浮標 -->
+                <div id="flashlight-hint" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/75 border border-emerald-400/40 px-3 py-1 rounded-full text-[11px] text-emerald-200 pointer-events-none whitespace-nowrap">
+                    💡 在石頭上移動滑鼠/手指，觀察透光水頭與霧層
+                </div>
             </div>
-            <input id="bangle-radius-slider" type="range" min="36" max="58" value="46" class="w-full accent-emerald-500 cursor-pointer mb-2" />
-            <p class="text-[11px] text-stone-400 leading-tight mb-2">
-              💡 拖曳調整位置，<b>滑鼠滾輪</b>縮放圈口；避開裂紋並套住綠色肉質可翻倍暴漲！
-            </p>
-            <div class="flex gap-1.5">
-              <button onclick="stampBangle()" class="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">
-                確定畫圈
-              </button>
-              <button onclick="clearBangles()" class="px-2.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold transition">
-                重畫
-              </button>
+
+            <!-- 底部操作按鈕列 -->
+            <div id="action-bar" class="mt-3 pt-2 flex flex-wrap items-center justify-between gap-3 z-10">
+                <div id="stone-clue-tag" class="text-xs text-amber-200/90 bg-amber-950/50 border border-amber-500/30 px-3 py-1.5 rounded-lg">
+                    等待選石...
+                </div>
+
+                <button id="btn-cut-now" onclick="cutStoneCompletely()" disabled class="btn-gold px-5 py-2.5 rounded-xl text-sm sm:text-base flex items-center gap-2 ml-auto">
+                    <span>🪚 一刀切開！</span>
+                </button>
             </div>
-          </div>
-        </div>
-
-        <!-- 底部工具與操作控制列 -->
-        <div id="bottom-toolbar" class="h-16 bg-stone-950/85 border border-stone-700/80 rounded-2xl px-4 flex items-center justify-between shrink-0">
-          <div id="toolbar-left" class="flex items-center gap-2">
-            <button onclick="openMarketModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-stone-950 font-black text-sm shadow-lg transition flex items-center gap-2 glow-btn">
-              <span>🏪 前往緬北公盤選石</span>
-            </button>
-          </div>
-          <div id="toolbar-right" class="flex items-center gap-2.5">
-            <span class="text-xs text-stone-400">提示：支援滑鼠或觸控筆直接操作機台</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- 右側欄：小紅書直播間即時互動彈幕 -->
-      <aside class="w-72 shrink-0 bg-stone-950/80 border border-stone-700/70 rounded-2xl flex flex-col overflow-hidden">
-        <div class="p-3 border-b border-stone-800 flex items-center justify-between bg-stone-900/60">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-xs font-bold text-white">直播間實時公屏</span>
-          </div>
-          <span class="text-[11px] text-stone-400">👁️ <span id="viewer-count">3,412</span> 人在看</span>
-        </div>
-
-        <!-- 彈幕滾動區 -->
-        <div id="danmaku-list" class="flex-1 p-3 overflow-y-auto flex flex-col gap-2 text-xs">
-          <!-- 動態彈幕 -->
-        </div>
-
-        <!-- 主播快捷喊話互動 -->
-        <div class="p-2.5 border-t border-stone-800 bg-stone-900/50">
-          <div class="text-[11px] text-stone-400 mb-1.5">🎙️ 主播互動喊話（提升熱度）：</div>
-          <div class="grid grid-cols-2 gap-1.5">
-            <button onclick="hostShout('家人們點點讚，這刀必出帝王綠！')" class="px-2 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-amber-200 font-medium truncate transition">
-              🔥 喊話求讚
-            </button>
-            <button onclick="hostShout('打燈看這水頭，膠感直接拉滿！')" class="px-2 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-emerald-300 font-medium truncate transition">
-              🔦 展示水頭
-            </button>
-            <button onclick="hostShout('直接上油切機，一刀定生死！')" class="px-2 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-rose-300 font-medium truncate transition">
-              🪚 霸氣開切
-            </button>
-            <button onclick="hostShout('手鐲位已經圈出來了，老闆們開價！')" class="px-2 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-sky-300 font-medium truncate transition">
-              ⭕ 喊價拍賣
-            </button>
-          </div>
-        </div>
-      </aside>
+        </section>
     </main>
-  </div>
 
-  <!-- ==================== 彈窗 1：公盤選石與砍價大廳 ==================== -->
-  <div id="market-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-stone-900 border border-amber-500/40 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/60">
-        <div>
-          <h2 class="serif-title text-xl font-black text-amber-300">🏔️ 緬北公盤原石交易市場</h2>
-          <p class="text-xs text-stone-400 mt-0.5">點擊原石可「免費強光壓燈」探查皮殼表現，選定後支援「大刀砍價」！</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="refreshMarket()" class="px-3.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-600 text-xs font-bold text-amber-200 transition">
-            🔄 換一批新料 (¥800)
-          </button>
-          <button onclick="closeMarketModal()" class="w-8 h-8 rounded-lg bg-stone-800 hover:bg-rose-600 text-stone-300 hover:text-white font-bold transition">✕</button>
-        </div>
-      </div>
+    <!-- 切出玉石結算彈窗 (Modal) -->
+    <div id="result-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="jade-panel max-w-md w-full rounded-3xl p-6 text-center relative overflow-hidden border-2 border-amber-400/60 shadow-2xl">
+            
+            <!-- 稀有度光芒背景 -->
+            <div id="result-rays" class="hidden absolute -inset-20 opacity-30 pointer-events-none god-rays" style="background: conic-gradient(from 0deg, transparent 0deg, #10b981 20deg, transparent 40deg, #f59e0b 60deg, transparent 80deg, #10b981 100deg, transparent 120deg, #f59e0b 140deg, transparent 160deg, #10b981 180deg, transparent 200deg, #f59e0b 220deg, transparent 240deg, #10b981 260deg, transparent 280deg, #f59e0b 300deg, transparent 320deg, #10b981 340deg, transparent 360deg);"></div>
 
-      <div id="market-grid" class="p-5 grid grid-cols-3 gap-4 overflow-y-auto">
-        <!-- JS 動態生成 6 顆原石 -->
-      </div>
+            <!-- 鑑定印章 (大漲 / 暴漲 / 小賺 / 切垮了) -->
+            <div class="relative z-10 mb-2">
+                <span id="result-verdict-stamp" class="stamp-badge text-lg sm:text-xl text-amber-300">大漲！</span>
+            </div>
+
+            <!-- 玉石展示圖示 -->
+            <div class="relative z-10 my-4 flex justify-center">
+                <div id="result-jade-orb" class="w-28 h-28 rounded-full flex items-center justify-center text-5xl shadow-2xl border-2 border-white/40 relative">
+                    <span id="result-emoji">💚</span>
+                </div>
+            </div>
+
+            <!-- 玉石名稱與種水標籤 -->
+            <div class="relative z-10">
+                <div class="inline-block px-3 py-0.5 rounded-full text-xs font-bold mb-1" id="result-rarity-badge">
+                    史詩・玻璃種
+                </div>
+                <h3 id="result-name" class="font-serif-tc text-2xl sm:text-3xl font-black text-white tracking-wide">
+                    玻璃種帝王綠
+                </h3>
+                <p id="result-trait" class="text-xs sm:text-sm text-emerald-200 mt-1">
+                    品相：滿綠無暇・重 4.2 兩
+                </p>
+                <p id="result-desc" class="text-xs text-slate-300/90 mt-2 bg-black/40 rounded-xl p-2.5 border border-white/10">
+                    燈下如一汪碧水，通透欲滴，乃是百年難遇的極品老坑帝王綠！
+                </p>
+            </div>
+
+            <!-- 估價與盈虧對比 -->
+            <div class="relative z-10 mt-4 bg-emerald-950/80 border border-amber-400/40 rounded-2xl p-3 flex items-center justify-around">
+                <div>
+                    <p class="text-[11px] text-slate-400">原石成本</p>
+                    <p id="result-cost" class="font-bold text-slate-200 text-sm">100 碎銀</p>
+                </div>
+                <div class="h-8 w-[1px] bg-amber-500/30"></div>
+                <div>
+                    <p class="text-[11px] text-amber-200/80">珠寶行估價</p>
+                    <p id="result-value" class="font-black text-amber-300 text-lg sm:text-xl">1,280 碎銀</p>
+                </div>
+            </div>
+
+            <!-- 決策按鈕：立即變現 vs 收入珍寶閣 -->
+            <div class="relative z-10 mt-5 grid grid-cols-2 gap-3">
+                <button onclick="collectToGallery()" class="btn-jade py-3 px-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center">
+                    <span>🏛️ 收入珍寶閣</span>
+                    <span class="text-[10px] font-normal text-emerald-100/80">永久收藏圖鑑</span>
+                </button>
+                <button onclick="sellJadeNow()" class="btn-gold py-3 px-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center">
+                    <span>💰 立即變現</span>
+                    <span id="sell-btn-sub" class="text-[10px] font-normal text-amber-950">+1,280 碎銀</span>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- ==================== 彈窗 2：買家競價與拉扯抬價 ==================== -->
-  <div id="sell-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-stone-900 border border-emerald-500/40 rounded-2xl w-full max-w-3xl flex flex-col shadow-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-stone-800 bg-stone-950/60 flex justify-between items-center">
-        <div>
-          <h2 id="sell-title" class="serif-title text-xl font-black text-emerald-300">💎 直播間買家搶標出價</h2>
-          <p id="sell-subtitle" class="text-xs text-stone-400 mt-0.5">評估品質報告，選擇高價買家成交，或存入私人多寶閣！</p>
+    <!-- 珍寶閣 (圖鑑與收藏展示) 彈窗 -->
+    <div id="gallery-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="jade-panel max-w-3xl w-full max-h-[88vh] rounded-3xl p-5 sm:p-6 flex flex-col border border-amber-400/50">
+            <div class="flex items-center justify-between border-b border-amber-500/30 pb-3 mb-4">
+                <div>
+                    <h3 class="font-serif-tc text-xl sm:text-2xl font-bold text-amber-300">🏛️ 私人珍寶閣・玉石圖鑑</h3>
+                    <p class="text-xs text-emerald-200/75 mt-0.5">已解鎖圖鑑：<span id="pokedex-count" class="text-amber-300 font-bold">0/8</span> 種｜典藏總估值：<span id="vault-total-value" class="text-amber-300 font-bold">0</span> 碎銀</p>
+                </div>
+                <button onclick="closeGalleryModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200">✕</button>
+            </div>
+
+            <!-- 圖鑑網格區 -->
+            <div class="flex-1 overflow-y-auto no-scrollbar space-y-5 pr-1">
+                <div>
+                    <h4 class="text-xs font-bold text-amber-200/90 uppercase tracking-wider mb-2.5">📖 玉石種水全圖鑑</h4>
+                    <div id="pokedex-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <!-- JS 動態渲染圖鑑卡片 -->
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-emerald-300/90 uppercase tracking-wider mb-2.5">💎 閣中私人典藏 (點擊可隨時拍賣變現)</h4>
+                    <div id="vault-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <!-- JS 動態渲染已收藏的玉石 -->
+                    </div>
+                </div>
+            </div>
         </div>
-        <span id="sell-profit-badge" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-          預估大漲
-        </span>
-      </div>
-
-      <div class="p-5 flex flex-col gap-4">
-        <!-- 鑑定報告摘要 -->
-        <div id="appraisal-summary" class="bg-stone-950/80 border border-stone-800 rounded-xl p-3.5 grid grid-cols-4 gap-3 text-center">
-          <!-- JS 填充 -->
-        </div>
-
-        <!-- 三位買家報價 -->
-        <div id="buyers-list" class="grid grid-cols-3 gap-3">
-          <!-- JS 填充 -->
-        </div>
-
-        <!-- 心理拉扯抬價條 -->
-        <div id="haggle-box" class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between">
-          <div>
-            <div class="text-xs font-bold text-amber-300">🔥 主播拉扯抬價（每塊料限 1 次）</div>
-            <div class="text-[11px] text-stone-400">利用直播間熱度逼迫買家加價 15%~35%，但有 20% 機率惹怒買家壓價 10%！</div>
-          </div>
-          <button id="btn-haggle" onclick="doHaggle()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition shrink-0">
-            🎙️ 直播間逼價！
-          </button>
-        </div>
-      </div>
-
-      <div class="px-6 py-3.5 bg-stone-950/80 border-t border-stone-800 flex justify-between items-center">
-        <button id="btn-keep-treasure" onclick="keepInGallery()" class="px-4 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/50 text-purple-200 text-xs font-bold transition">
-          🏛️ 收入私人多寶閣（不賣了）
-        </button>
-        <div class="text-xs text-stone-400">點擊上方任一買家卡片即可直接成交</div>
-      </div>
     </div>
-  </div>
 
-  <!-- ==================== 彈窗 3：多寶閣圖鑑 ==================== -->
-  <div id="gallery-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-stone-900 border border-amber-500/40 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-stone-800 flex justify-between items-center bg-stone-950/60">
-        <div>
-          <h2 class="serif-title text-xl font-black text-amber-300">🏛️ 私人多寶閣 · 翡翠珍品圖鑑</h2>
-          <p class="text-xs text-stone-400">收藏切出的極品明料與手鐲，永久提升直播間基礎人氣！</p>
+    <!-- GitHub 部署教學彈窗 -->
+    <div id="github-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="jade-panel max-w-lg w-full rounded-3xl p-6 border border-slate-500/50">
+            <div class="flex items-center justify-between border-b border-white/15 pb-3 mb-4">
+                <h3 class="font-serif-tc text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    <span>🚀 一鍵發布至 GitHub Pages</span>
+                </h3>
+                <button onclick="closeGithubModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200">✕</button>
+            </div>
+            <div class="space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                <p>本遊戲已採用<strong>零依賴單一 HTML 檔案架構</strong>，無需安裝任何套件即可直接託管在 GitHub：</p>
+                <ol class="list-decimal list-inside space-y-2 bg-black/40 p-3.5 rounded-xl border border-white/10 text-slate-300">
+                    <li>登入你的 <span class="text-amber-300 font-bold">GitHub</span> 帳號，點擊右上角 <code>+</code> 建立新的儲存庫（Repository，例如命名為 <code>jade-blindbox</code>）。</li>
+                    <li>點擊 <strong>uploading an existing file</strong>，將此網頁存成 <code>index.html</code> 並上傳至儲存庫。</li>
+                    <li>進入儲存庫的 <strong>Settings（設定）</strong> → 左側選單點擊 <strong>Pages</strong>。</li>
+                    <li>在 <strong>Branch</strong> 下拉選單選擇 <code>main</code> 資料夾 <code>/ (root)</code>，點擊 <strong>Save</strong>。</li>
+                    <li>等待約 1 分鐘，GitHub 即會產生專屬網址，隨時在手機或電腦上分享遊玩！</li>
+                </ol>
+            </div>
+            <div class="mt-5 flex justify-end">
+                <button onclick="closeGithubModal()" class="btn-jade px-5 py-2 rounded-xl text-sm font-bold">我知道了</button>
+            </div>
         </div>
-        <button onclick="document.getElementById('gallery-modal').classList.add('hidden')" class="w-8 h-8 rounded-lg bg-stone-800 hover:bg-rose-600 text-white font-bold">✕</button>
-      </div>
-      <div id="gallery-grid" class="p-5 grid grid-cols-4 gap-3 overflow-y-auto">
-        <!-- JS 生成 -->
-      </div>
     </div>
-  </div>
 
-  <!-- ==================== 彈窗 4：GitHub 部署指南 ==================== -->
-  <div id="github-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-stone-900 border border-stone-600 rounded-2xl w-full max-w-xl p-6 shadow-2xl">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-black text-white">📦 一鍵部署至 GitHub Pages</h2>
-        <button onclick="document.getElementById('github-modal').classList.add('hidden')" class="w-8 h-8 rounded-lg bg-stone-800 text-white">✕</button>
-      </div>
-      <ol class="text-xs text-stone-300 space-y-2 list-decimal list-inside mb-4 leading-relaxed">
-        <li>前往 GitHub 建立一個新的公開儲存庫（Repository），例如 <code class="text-amber-300">jade-master</code>。</li>
-        <li>點擊下方的<b>「複製完整 index.html 原始碼」</b>按鈕。</li>
-        <li>在 GitHub 點擊 <b>Add file → Create new file</b>，檔名輸入 <code class="text-emerald-300">index.html</code> 並貼上原始碼。</li>
-        <li>進入儲存庫的 <b>Settings → Pages</b>，將 Branch 設為 <code class="text-amber-300">main</code> 並儲存，即可獲得免費遊玩網址！</li>
-      </ol>
-      <button onclick="copySourceCode()" id="copy-code-btn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
-        📋 複製完整 index.html 原始碼
-      </button>
-    </div>
-  </div>
+    <!-- 浮動訊息提示 Toast -->
+    <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none"></div>
 
-  <script>
-    // ==================== 1. Web Audio API 擬真音效合成器 ====================
-    const SoundFX = (() => {
-      let ctx = null;
-      function ensureCtx() {
-        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === 'suspended') ctx.resume();
-        return ctx;
-      }
+    <script>
+        /**
+         * ============================================================================
+         * 玉石開開開 - 核心遊戲邏輯、Web Audio 合成音效與 Canvas 互動刮刮樂/打燈引擎
+         * ============================================================================
+         */
 
-      return {
-        playWater() {
-          const c = ensureCtx();
-          const bufSize = c.sampleRate * 0.12;
-          const buf = c.createBuffer(1, bufSize, c.sampleRate);
-          const data = buf.getChannelData(0);
-          for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.4));
-          const noise = c.createBufferSource();
-          noise.buffer = buf;
-          const filter = c.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.value = 1400;
-          const gain = c.createGain();
-          gain.gain.value = 0.08;
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(c.destination);
-          noise.start();
-        },
-        playGrind() {
-          const c = ensureCtx();
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220 + Math.random() * 90, c.currentTime);
-          gain.gain.setValueAtTime(0.06, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.09);
-          osc.connect(gain);
-          gain.connect(c.destination);
-          osc.start();
-          osc.stop(c.currentTime + 0.09);
-        },
-        playSawCut() {
-          const c = ensureCtx();
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(520, c.currentTime);
-          osc.frequency.linearRampToValueAtTime(880, c.currentTime + 0.45);
-          osc.frequency.linearRampToValueAtTime(360, c.currentTime + 0.95);
-          gain.gain.setValueAtTime(0.14, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 1.0);
-          osc.connect(gain);
-          gain.connect(c.destination);
-          osc.start();
-          osc.stop(c.currentTime + 1.0);
-        },
-        playJadeChime(highQuality = true) {
-          const c = ensureCtx();
-          const freqs = highQuality ? [1046.5, 1318.5, 1568, 2093] : [330, 293.6];
-          freqs.forEach((f, idx) => {
-            const osc = c.createOscillator();
-            const gain = c.createGain();
-            osc.type = highQuality ? 'sine' : 'triangle';
-            osc.frequency.setValueAtTime(f, c.currentTime + idx * 0.08);
-            gain.gain.setValueAtTime(0.14, c.currentTime + idx * 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.0008, c.currentTime + idx * 0.08 + 0.9);
-            osc.connect(gain);
-            gain.connect(c.destination);
-            osc.start(c.currentTime + idx * 0.08);
-            osc.stop(c.currentTime + idx * 0.08 + 0.95);
-          });
-        },
-        playCoin() {
-          const c = ensureCtx();
-          [987.77, 1318.51].forEach((f, i) => {
-            const osc = c.createOscillator();
-            const gain = c.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(f, c.currentTime + i * 0.07);
-            gain.gain.setValueAtTime(0.12, c.currentTime + i * 0.07);
-            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + i * 0.07 + 0.35);
-            osc.connect(gain);
-            gain.connect(c.destination);
-            osc.start(c.currentTime + i * 0.07);
-            osc.stop(c.currentTime + i * 0.07 + 0.36);
-          });
+        // --- 1. 遊戲數據與配置 ---
+        const STONE_TIERS = [
+            {
+                id: 'common',
+                name: '凡品白沙皮原石',
+                price: 100,
+                badge: '入門賭石',
+                badgeColor: 'bg-slate-700 text-slate-200',
+                rockColor: '#6b7280',
+                rockDark: '#374151',
+                clues: [
+                    '皮殼較粗，隱約可見一絲淡綠「松花」',
+                    '石形飽滿，表面有細微「水路」紋理',
+                    '老場口白鹽沙皮，砂粒均勻緊實',
+                    '邊角處略顯灰暗，似乎藏有「癬夾綠」'
+                ],
+                weights: { trash: 42, glutinous: 38, ice: 14, imperial: 4, mutton: 2 }
+            },
+            {
+                id: 'fine',
+                name: '精品莫西沙黑烏沙',
+                price: 300,
+                badge: '行家優選',
+                badgeColor: 'bg-emerald-900 text-emerald-200 border border-emerald-500/40',
+                rockColor: '#3f4a45',
+                rockDark: '#1e2622',
+                clues: [
+                    '皮殼緊緻如象皮，蟒帶纏繞半圈！',
+                    '表面起「翻砂」現象，打燈隱見綠霧',
+                    '莫西沙老坑種，脫砂處已露微弱瑩光',
+                    '松花濃郁成團，極有可能「色進」內部'
+                ],
+                weights: { trash: 20, glutinous: 32, ice: 30, imperial: 12, mutton: 6 }
+            },
+            {
+                id: 'imperial',
+                name: '極品木那帝王包漿料',
+                price: 800,
+                badge: '鎮店之寶',
+                badgeColor: 'bg-amber-900 text-amber-200 border border-amber-400/50',
+                rockColor: '#4c3f30',
+                rockDark: '#261e15',
+                clues: [
+                    '罕見黃梨皮包漿，蟒帶生綠、松花爆滿！',
+                    '木那至尊場口，傳說「海天一色，點點雪花」',
+                    '皮薄如紙，未切已覺寒氣逼人、靈光內蘊',
+                    '千年老坑水石，整塊皮殼皆泛起琥珀光澤'
+                ],
+                weights: { trash: 8, glutinous: 15, ice: 32, imperial: 27, mutton: 18 }
+            }
+        ];
+
+        // 玉石圖鑑資料庫 (共 8 種經典玉石，涵蓋 5 大稀有度)
+        const JADE_CATALOG = [
+            {
+                id: 'marble_trash',
+                category: 'trash',
+                rarityLabel: '凡俗・廢料',
+                rarityClass: 'bg-slate-700 text-slate-300',
+                name: '白花大理石（切垮）',
+                emoji: '🪨',
+                baseValue: 25,
+                primaryColor: '#94a3b8',
+                secondaryColor: '#cbd5e1',
+                glowColor: 'rgba(148, 163, 184, 0.3)',
+                desc: '俗稱「狗屎地」，石性重、無水頭，連做手把件都嫌粗糙，這次看走眼了！'
+            },
+            {
+                id: 'cracked_quartz',
+                category: 'trash',
+                rarityLabel: '凡俗・石料',
+                rarityClass: 'bg-slate-700 text-slate-300',
+                name: '多裂水沫子',
+                emoji: '🧊',
+                baseValue: 55,
+                primaryColor: '#a5b4fc',
+                secondaryColor: '#e0e7ff',
+                glowColor: 'rgba(165, 180, 252, 0.35)',
+                desc: '雖有一絲透光，實則是伴生石英岩，內部裂紋交錯，難以取件。'
+            },
+            {
+                id: 'glutinous_green',
+                category: 'glutinous',
+                rarityLabel: '精良・糯種',
+                rarityClass: 'bg-teal-900 text-teal-200 border border-teal-400/40',
+                name: '糯種晴水青玉',
+                emoji: '🍏',
+                baseValue: 220,
+                primaryColor: '#34d399',
+                secondaryColor: '#a7f3d0',
+                glowColor: 'rgba(52, 211, 153, 0.45)',
+                desc: '質地如煮熟的糯米湯般溫潤細膩，底色清雅淡綠，適合雕琢平安扣。'
+            },
+            {
+                id: 'glutinous_lavender',
+                category: 'glutinous',
+                rarityLabel: '精良・糯冰',
+                rarityClass: 'bg-purple-900 text-purple-200 border border-purple-400/40',
+                name: '糯冰春帶彩',
+                emoji: '🔮',
+                baseValue: 360,
+                primaryColor: '#c084fc',
+                secondaryColor: '#6ee7b7',
+                glowColor: 'rgba(192, 132, 252, 0.5)',
+                desc: '紫氣東來伴隨一抹翠綠，「春帶彩」寓意富貴吉祥，市場極受歡迎！'
+            },
+            {
+                id: 'ice_yang_green',
+                category: 'ice',
+                rarityLabel: '稀有・冰種',
+                rarityClass: 'bg-emerald-800 text-emerald-100 border border-emerald-300/60',
+                name: '高冰種陽綠翡翠',
+                emoji: '💚',
+                baseValue: 680,
+                primaryColor: '#10b981',
+                secondaryColor: '#fde047',
+                glowColor: 'rgba(16, 185, 129, 0.7)',
+                desc: '三分水頭七分色！陽光下綠意鮮活明媚，清亮似冰，已有珠寶級收藏價值！'
+            },
+            {
+                id: 'ice_floating_flower',
+                category: 'ice',
+                rarityLabel: '稀有・高冰',
+                rarityClass: 'bg-cyan-800 text-cyan-100 border border-cyan-300/60',
+                name: '高冰藍水飄花',
+                emoji: '💠',
+                baseValue: 820,
+                primaryColor: '#06b6d4',
+                secondaryColor: '#34d399',
+                glowColor: 'rgba(6, 182, 212, 0.75)',
+                desc: '晶瑩剔透的冰底中飄散著水墨畫般的靈動綠花，意境深遠，出手必賺！'
+            },
+            {
+                id: 'glass_imperial',
+                category: 'imperial',
+                rarityLabel: '史詩・玻璃種',
+                rarityClass: 'bg-gradient-to-r from-emerald-600 to-amber-500 text-white font-black',
+                name: '玻璃種帝王綠',
+                emoji: '👑',
+                baseValue: 1850,
+                primaryColor: '#059669',
+                secondaryColor: '#fef08a',
+                glowColor: 'rgba(16, 185, 129, 0.95)',
+                desc: '綠得純正、濃郁、均勻，燈下起「螢光效應」與「膠感」，翡翠中的王者！'
+            },
+            {
+                id: 'mutton_fat_dragon',
+                category: 'mutton',
+                rarityLabel: '傳說・神品',
+                rarityClass: 'bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 text-amber-950 font-black',
+                name: '羊脂白玉・龍石種',
+                emoji: '🐉',
+                baseValue: 3200,
+                primaryColor: '#fef9c3',
+                secondaryColor: '#34d399',
+                glowColor: 'rgba(253, 224, 71, 0.95)',
+                desc: '傳說中「冬暖夏涼、神龍護體」的絕世神玉，油潤如凝脂，價值連城！'
+            }
+        ];
+
+        // 隨機品相詞條 (影響最終估價倍率)
+        const JADE_TRAITS = [
+            { label: '滿綠無暇', mult: 1.35 },
+            { label: '起膠起螢', mult: 1.25 },
+            { label: '靈動飄花', mult: 1.15 },
+            { label: '種老肉細', mult: 1.05 },
+            { label: '略帶棉絮', mult: 0.90 },
+            { label: '邊角微裂', mult: 0.80 }
+        ];
+
+        const MASTER_TIPS = [
+            '「寧買一條線，不買一大片。皮殼起綠點稱為『松花』，往往代表內部有綠！」',
+            '「打燈看水頭：光圈擴散越廣、越通透，說明內部種水越老、價值越高！」',
+            '「一刀窮、一刀富、一刀穿麻布。切垮了別灰心，行家也是千錘百鍊出來的！」',
+            '「擦石開窗能穩步探明內部成色，若見到滿綠，不妨直接一刀切開迎大漲！」',
+            '「玻璃種帝王綠與龍石種乃傳世神品，若幸運開出，強烈建議收入珍寶閣典藏！」'
+        ];
+
+        // --- 2. 遊戲全域狀態 ---
+        let state = {
+            coins: 500,
+            soundEnabled: true,
+            unlockedIds: [], // 已解鎖的圖鑑 ID 陣列
+            vault: [],       // 已收藏的玉石物件陣列
+            marketOffers: [],// 當前攤位上的三顆原石
+            activeStone: null, // 當前正在切割的原石實例
+            currentTool: 'flashlight', // 'flashlight' | 'rub'
+            isCutting: false,
+            rubProgress: 0
+        };
+
+        // 從 localStorage 載入存檔
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('jade_kaikaikai_save_v1');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state.coins = typeof parsed.coins === 'number' ? parsed.coins : 500;
+                    state.unlockedIds = Array.isArray(parsed.unlockedIds) ? parsed.unlockedIds : [];
+                    state.vault = Array.isArray(parsed.vault) ? parsed.vault : [];
+                }
+            } catch (e) {
+                console.warn('讀取存檔失敗，使用初始狀態', e);
+            }
         }
-      };
-    })();
 
-    // ==================== 2. 遊戲核心資料與翡翠知識庫 ====================
-    const ORIGINS = [
-      { name: '莫西沙場口', skin: '#36393b', crust: '#5b6166', feature: '老象皮翻砂，高機率出冰種、玻璃種', basePrice: 12000, qualityBias: 0.72 },
-      { name: '木那場口', skin: '#b5aa99', crust: '#d6cbb8', feature: '白鹽砂皮殼，海天一色點點雪花棉', basePrice: 15000, qualityBias: 0.78 },
-      { name: '會卡場口', skin: '#4b5e43', crust: '#6f8765', feature: '青蛙皮蠟殼，水頭極長但需防內裂', basePrice: 9500, qualityBias: 0.62 },
-      { name: '大馬坎場口', skin: '#9a6b32', crust: '#c28b46', feature: '黃梨皮水石，常見紅霧黃霧巧雕料', basePrice: 8000, qualityBias: 0.58 },
-      { name: '後江場口', skin: '#54584e', crust: '#787d70', feature: '個頭小巧皮薄，切開往往滿色翻倍', basePrice: 11000, qualityBias: 0.70 },
-      { name: '帕敢老場', skin: '#47433f', crust: '#6b655f', feature: '黑烏砂皮殼，大起大落帝王綠搖籃', basePrice: 18000, qualityBias: 0.80 }
-    ];
+        function saveGame() {
+            try {
+                localStorage.setItem('jade_kaikaikai_save_v1', JSON.stringify({
+                    coins: state.coins,
+                    unlockedIds: state.unlockedIds,
+                    vault: state.vault
+                }));
+            } catch (e) {
+                console.warn('儲存進度失敗', e);
+            }
+        }
 
-    const JADE_GRADES = [
-      { id: 'brick', name: '大理石磚頭料', color: '#9ca3af', glow: '#d1d5db', mult: 0.12, transparency: 0.15 },
-      { id: 'bean', name: '糯種豆綠料', color: '#4ade80', glow: '#86efac', mult: 0.75, transparency: 0.45 },
-      { id: 'ice_float', name: '高冰飄藍花', color: '#2dd4bf', glow: '#99f6e4', mult: 2.1, transparency: 0.78 },
-      { id: 'yang_green', name: '正陽綠冰種', color: '#10b981', glow: '#6ee7b7', mult: 3.4, transparency: 0.85 },
-      { id: 'imperial', name: '極品帝王綠玻璃種', color: '#059669', glow: '#34d399', mult: 6.2, transparency: 0.96 }
-    ];
+        // --- 3. Web Audio API 合成音效系統 (零外部音檔依賴) ---
+        let audioCtx = null;
 
-    const GALLERY_CATALOG = [
-      { id: 'g1', name: '帝王綠滿色正圈', icon: '💚', desc: '濃正陽勻，玻璃光感十足的傳世手鐲' },
-      { id: 'g2', name: '木那雪花棉牌料', icon: '❄️', desc: '點點白棉如瑞雪紛飛，意境絕美' },
-      { id: 'g3', name: '高冰飄花貴妃鐲', icon: '🌊', desc: '靈動藍綠飄花遊走於冰透玉肉之間' },
-      { id: 'g4', name: '正陽綠平安無事牌', icon: '🟩', desc: '無紋無裂，一抹翠色令人心醉' },
-      { id: 'g5', name: '黃加綠福祿壽明料', icon: '🟡', desc: '天然黃霧與翠綠交織，罕見三彩' },
-      { id: 'g6', name: '莫西沙起螢光蛋面', icon: '🔮', desc: '剛性十足，強光下起強烈螢光效應' },
-      { id: 'g7', name: '后江滿色辣綠戒面', icon: '💍', desc: '色辣奪目，翻種翻色代表作' },
-      { id: 'g8', name: '冰種晴水手鐲', icon: '🩵', desc: '如晴朗湖水般清澈甘甜' },
-      { id: 'g9', name: '會卡爆色大漲明料', icon: '🌿', desc: '刀過色進，滿眼翠意驚艷全場' },
-      { id: 'g10', name: '老坑玻璃種觀音料', icon: '✨', desc: '純淨無瑕，水頭足達三分水' },
-      { id: 'g11', name: '春帶彩紫羅蘭手鐲', icon: '💜', desc: '粉紫與翠綠並存，貴氣逼人' },
-      { id: 'g12', name: '帕敢黑烏砂切漲王', icon: '👑', desc: '一刀切出百倍暴利，震撼直播間' }
-    ];
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
 
-    const STEPS_META = [
-      { id: 1, title: '1. 沖水刷洗泥沙', desc: '按住滑鼠刷除原石表面黃泥', icon: '🚿' },
-      { id: 2, title: '2. 360° 壓燈看水頭', desc: '移動強光手電筒觀察內部吃光', icon: '🔦' },
-      { id: 3, title: '3. 角磨機開窗擦皮', desc: '磨開皮殼露出玉肉，可先賣半明料', icon: '⚙️' },
-      { id: 4, title: '4. 畫線＋油切一刀切', desc: '拖曳畫出切割線，一刀見真章', icon: '🪚' },
-      { id: 5, title: '5. 避裂畫手鐲位', desc: '拖曳與滾輪套取完美手鐲', icon: '⭕' },
-      { id: 6, title: '6. 買家競價變現', desc: '直播間搶標拍賣或納入珍藏', icon: '💰' }
-    ];
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
 
-    // ==================== 3. 遊戲全域狀態 ====================
-    const state = {
-      money: 50000,
-      fame: 1280,
-      wins: 0,
-      unlockedGallery: new Set(),
-      marketStones: [],
-      currentStone: null,
-      step: 0, // 0=未選石, 1=沖水, 2=壓燈, 3=擦窗, 4=畫線切石, 5=畫手鐲, 6=成交結算
-      mudProgress: 0,
-      windowProgress: 0,
-      cutLine: null, // {x1, y1, x2, y2}
-      isCut: false,
-      cutAnimProgress: 0,
-      bangles: [], // [{x, y, r, score, label}]
-      previewBangle: { x: 420, y: 260, r: 46 },
-      haggled: false,
-      currentOffers: [],
-      particles: [],
-      pointer: { x: 400, y: 260, down: false, startX: 0, startY: 0 }
-    };
+            const now = audioCtx.currentTime;
 
-    // 離屏畫布：泥土遮罩、皮殼遮罩
-    const mudCanvas = document.createElement('canvas');
-    mudCanvas.width = 860;
-    mudCanvas.height = 520;
-    const mudCtx = mudCanvas.getContext('2d');
+            if (type === 'coin') {
+                // 清脆銅錢/碎銀撞擊聲
+                [1200, 1650].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.18, now + idx * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.25);
+                });
+            } else if (type === 'rub') {
+                // 砂紙磨石沙沙聲 (白噪音短脈衝)
+                const bufferSize = audioCtx.sampleRate * 0.07;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
 
-    const crustCanvas = document.createElement('canvas');
-    crustCanvas.width = 860;
-    crustCanvas.height = 520;
-    const crustCtx = crustCanvas.getContext('2d');
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1800 + Math.random() * 600;
 
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
 
-    // ==================== 4. 原石生成演算法 ====================
-    function generateStone(index) {
-      const origin = ORIGINS[Math.floor(Math.random() * ORIGINS.length)];
-      const weight = +(1.5 + Math.random() * 8.5).toFixed(1);
-      const price = Math.round((origin.basePrice * (0.7 + Math.random() * 0.9) * (0.6 + weight * 0.12)) / 100) * 100;
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start(now);
+            } else if (type === 'cut') {
+                // 切石機轟鳴與石裂聲
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.38);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'rare') {
+                // 出貨大漲：古風五聲音階琵琶/編鐘和弦
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.22, now + i * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.9);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.9);
+                });
+            } else if (type === 'fail') {
+                // 切垮了低沉音效
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(130, now + 0.45);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            }
+        }
 
-      // 決定真實內部等級
-      const roll = Math.random();
-      let grade;
-      if (roll < 0.28) grade = JADE_GRADES[0]; // 磚頭
-      else if (roll < 0.56) grade = JADE_GRADES[1]; // 豆綠
-      else if (roll < 0.78) grade = JADE_GRADES[2]; // 高冰飄花
-      else if (roll < 0.93) grade = JADE_GRADES[3]; // 正陽綠
-      else grade = JADE_GRADES[4]; // 帝王綠
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const btn = document.getElementById('btn-sound');
+            btn.textContent = state.soundEnabled ? '🔊' : '🔇';
+            showToast(state.soundEnabled ? '音效已開啟' : '音效已靜音');
+        }
 
-      // 生成不規則原石多邊形頂點 (以 0,0 為中心)
-      const vertices = [];
-      const count = 14;
-      for (let i = 0; i < count; i++) {
-        const ang = (i / count) * Math.PI * 2;
-        const rx = 145 + Math.sin(i * 2.3 + index) * 22 + (Math.random() - 0.5) * 18;
-        const ry = 112 + Math.cos(i * 1.9 + index) * 18 + (Math.random() - 0.5) * 15;
-        vertices.push({ x: Math.cos(ang) * rx, y: Math.sin(ang) * ry });
-      }
+        // --- 4. 原石市場與結果生成邏輯 ---
+        function generateMarketOffers() {
+            state.marketOffers = STONE_TIERS.map((tier, idx) => {
+                const randomClue = tier.clues[Math.floor(Math.random() * tier.clues.length)];
+                // 隨機生成石頭多邊形頂點偏移，讓每顆石頭外觀獨一無二
+                const seed = Math.random() * 1000;
+                return {
+                    uid: `stone_${Date.now()}_${idx}`,
+                    tier,
+                    clue: randomClue,
+                    seed
+                };
+            });
+            renderMarket();
+        }
 
-      // 內部色根與裂紋配置
-      const colorZones = [];
-      const zoneCount = grade.id === 'brick' ? 0 : (grade.id === 'imperial' ? 4 : 2 + Math.floor(Math.random() * 2));
-      for (let i = 0; i < zoneCount; i++) {
-        colorZones.push({
-          x: (Math.random() - 0.5) * 150,
-          y: (Math.random() - 0.5) * 100,
-          r: 38 + Math.random() * 48
+        function refreshMarket() {
+            playSound('rub');
+            generateMarketOffers();
+            // 隨機更換老師傅口訣
+            const tipEl = document.getElementById('master-tip');
+            tipEl.textContent = MASTER_TIPS[Math.floor(Math.random() * MASTER_TIPS.length)];
+            showToast('已為您換上一批新到的老坑原石！');
+        }
+
+        function renderMarket() {
+            const container = document.getElementById('stone-cards-container');
+            container.innerHTML = '';
+
+            state.marketOffers.forEach((offer, index) => {
+                const canAfford = state.coins >= offer.tier.price;
+                const isSelected = state.activeStone && state.activeStone.uid === offer.uid;
+
+                const card = document.createElement('div');
+                card.className = `p-3.5 rounded-xl border transition-all ${
+                    isSelected 
+                        ? 'bg-emerald-900/60 border-amber-400 shadow-lg shadow-amber-500/20' 
+                        : 'bg-black/40 border-emerald-500/25 hover:border-amber-400/50'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-2xl shadow-inner border border-white/10" style="background: radial-gradient(circle at 30% 30%, ${offer.tier.rockColor}, ${offer.tier.rockDark})">
+                                🪨
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-serif-tc font-bold text-sm sm:text-base text-amber-100">${offer.tier.name}</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded ${offer.tier.badgeColor}">${offer.tier.badge}</span>
+                                </div>
+                                <p class="text-[11px] text-emerald-300/85 mt-0.5 line-clamp-1">🔍 ${offer.clue}</p>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="buyStone(${index})" 
+                            ${!canAfford || state.activeStone ? 'disabled' : ''}
+                            class="btn-gold px-3 py-2 rounded-xl text-xs whitespace-nowrap flex flex-col items-center">
+                            <span>買下開切</span>
+                            <span class="text-[10px] opacity-90">🪙 ${offer.tier.price}</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 根據原石權重抽出內部玉石與品相
+        function rollJadeOutcome(tier) {
+            const weights = tier.weights;
+            const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+            let roll = Math.random() * totalWeight;
+            let chosenCategory = 'trash';
+
+            for (const [cat, weight] of Object.entries(weights)) {
+                if (roll < weight) {
+                    chosenCategory = cat;
+                    break;
+                }
+                roll -= weight;
+            }
+
+            const candidates = JADE_CATALOG.filter(j => j.category === chosenCategory);
+            const jadeTemplate = candidates[Math.floor(Math.random() * candidates.length)];
+            const trait = JADE_TRAITS[Math.floor(Math.random() * JADE_TRAITS.length)];
+            const weightLiang = (1.5 + Math.random() * 4.8).toFixed(1);
+
+            // 計算最終估價
+            const finalValue = Math.round(jadeTemplate.baseValue * trait.mult * (0.9 + Math.random() * 0.25));
+
+            return {
+                ...jadeTemplate,
+                traitLabel: trait.label,
+                weightLiang,
+                cost: tier.price,
+                finalValue,
+                timestamp: Date.now()
+            };
+        }
+
+        function buyStone(index) {
+            if (state.activeStone) {
+                showToast('請先切開目前工作台上的原石！');
+                return;
+            }
+            const offer = state.marketOffers[index];
+            if (!offer || state.coins < offer.tier.price) {
+                showToast('碎銀不足！可領取商會救濟金或拍賣珍寶閣藏品');
+                return;
+            }
+
+            // 扣款並生成玉石結果
+            state.coins -= offer.tier.price;
+            playSound('coin');
+            updateUIHeader();
+
+            const outcome = rollJadeOutcome(offer.tier);
+            state.activeStone = {
+                ...offer,
+                outcome,
+                revealed: false
+            };
+            state.rubProgress = 0;
+
+            // 更新 UI 進入解石狀態
+            renderMarket();
+            setupWorkshopCanvas();
+            showToast(`已購得【${offer.tier.name}】，請打燈或擦石開窗！`);
+        }
+
+        // --- 5. Canvas 雙圖層解石引擎 (底層玉肉渲染 + 頂層石皮刮除 + 手電筒光束) ---
+        const canvas = document.getElementById('jade-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 離屏畫布：分別儲存「內部玉肉層」與「外部石皮層」
+        let jadeLayerCanvas = document.createElement('canvas');
+        let jadeLayerCtx = jadeLayerCanvas.getContext('2d');
+        let crustLayerCanvas = document.createElement('canvas');
+        let crustLayerCtx = crustLayerCanvas.getContext('2d');
+
+        let pointerPos = { x: -999, y: -999, active: false };
+        let particles = [];
+        let animFrameId = null;
+        let stonePolygon = [];
+
+        function setupWorkshopCanvas() {
+            document.getElementById('empty-state').classList.add('hidden');
+            canvas.classList.remove('hidden');
+            document.getElementById('tool-bar').classList.remove('hidden');
+            document.getElementById('btn-cut-now').disabled = false;
+
+            const stone = state.activeStone;
+            document.getElementById('workshop-title').textContent = `⚒️ 正在解石：${stone.tier.name}`;
+            document.getElementById('workshop-subtitle').textContent = `皮殼特徵：${stone.clue}`;
+            document.getElementById('stone-clue-tag').innerHTML = `💰 投入本金：<span class="font-bold text-amber-300">${stone.tier.price} 碎銀</span>`;
+
+            resizeAndBuildStoneLayers();
+            setTool('flashlight');
+
+            if (!animFrameId) {
+                renderLoop();
+            }
+        }
+
+        function resizeAndBuildStoneLayers() {
+            const container = document.getElementById('workshop-stage');
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            jadeLayerCanvas.width = rect.width;
+            jadeLayerCanvas.height = rect.height;
+            crustLayerCanvas.width = rect.width;
+            crustLayerCanvas.height = rect.height;
+
+            if (!state.activeStone) return;
+
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const radiusX = Math.min(rect.width * 0.34, 155);
+            const radiusY = Math.min(rect.height * 0.36, 125);
+
+            // 1. 生成自然不規則原石多邊形輪廓
+            stonePolygon = [];
+            const numPoints = 16;
+            const seed = state.activeStone.seed;
+            for (let i = 0; i < numPoints; i++) {
+                const angle = (i / numPoints) * Math.PI * 2;
+                const noise = 0.85 + 0.22 * Math.sin(angle * 3 + seed) * Math.cos(angle * 2 - seed);
+                stonePolygon.push({
+                    x: cx + Math.cos(angle) * radiusX * noise,
+                    y: cy + Math.sin(angle) * radiusY * noise
+                });
+            }
+
+            // 2. 繪製底層「內部玉肉層」(jadeLayerCanvas)
+            const outcome = state.activeStone.outcome;
+            jadeLayerCtx.clearRect(0, 0, rect.width, rect.height);
+            jadeLayerCtx.save();
+            traceStonePath(jadeLayerCtx);
+            jadeLayerCtx.clip();
+
+            // 玉肉漸層底色
+            const jadeGrad = jadeLayerCtx.createRadialGradient(cx - 25, cy - 25, 10, cx, cy, radiusX * 1.1);
+            jadeGrad.addColorStop(0, outcome.secondaryColor);
+            jadeGrad.addColorStop(0.55, outcome.primaryColor);
+            jadeGrad.addColorStop(1, '#062419');
+            jadeLayerCtx.fillStyle = jadeGrad;
+            jadeLayerCtx.fillRect(0, 0, rect.width, rect.height);
+
+            // 繪製內部天然紋理（飄花 / 冰紋 / 裂隙）
+            for (let i = 0; i < 18; i++) {
+                jadeLayerCtx.beginPath();
+                const rx = cx + (Math.sin(i * 45 + seed) * radiusX * 0.65);
+                const ry = cy + (Math.cos(i * 33 + seed) * radiusY * 0.65);
+                const rSize = 10 + (i % 4) * 12;
+                jadeLayerCtx.arc(rx, ry, rSize, 0, Math.PI * 2);
+                jadeLayerCtx.fillStyle = outcome.category === 'trash'
+                    ? 'rgba(255, 255, 255, 0.12)'
+                    : 'rgba(255, 255, 255, 0.22)';
+                jadeLayerCtx.fill();
+            }
+
+            // 如果是廢料，畫幾條明顯石裂
+            if (outcome.category === 'trash') {
+                jadeLayerCtx.strokeStyle = 'rgba(30, 41, 59, 0.65)';
+                jadeLayerCtx.lineWidth = 2;
+                for (let c = 0; c < 5; c++) {
+                    jadeLayerCtx.beginPath();
+                    jadeLayerCtx.moveTo(cx - 60 + c * 25, cy - 50);
+                    jadeLayerCtx.lineTo(cx - 30 + c * 20, cy + 10);
+                    jadeLayerCtx.lineTo(cx - 50 + c * 28, cy + 55);
+                    jadeLayerCtx.stroke();
+                }
+            }
+            jadeLayerCtx.restore();
+
+            // 3. 繪製頂層「原石外皮層」(crustLayerCanvas - 可被擦石工具刮除)
+            const tier = state.activeStone.tier;
+            crustLayerCtx.clearRect(0, 0, rect.width, rect.height);
+            crustLayerCtx.save();
+            traceStonePath(crustLayerCtx);
+            crustLayerCtx.clip();
+
+            const rockGrad = crustLayerCtx.createRadialGradient(cx - 30, cy - 30, 15, cx, cy, radiusX * 1.15);
+            rockGrad.addColorStop(0, tier.rockColor);
+            rockGrad.addColorStop(1, tier.rockDark);
+            crustLayerCtx.fillStyle = rockGrad;
+            crustLayerCtx.fillRect(0, 0, rect.width, rect.height);
+
+            // 繪製皮殼粗糙砂粒與「松花」(綠色斑點暗示)
+            for (let i = 0; i < 160; i++) {
+                const px = cx + (Math.sin(i * 19.3 + seed) * radiusX);
+                const py = cy + (Math.cos(i * 27.1 + seed) * radiusY);
+                crustLayerCtx.fillStyle = i % 2 === 0 ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.08)';
+                crustLayerCtx.fillRect(px, py, 3, 3);
+            }
+
+            // 根據真實玉石等級，在皮殼上繪製不同濃度的「松花/蟒帶」線索
+            const clueDensity = outcome.category === 'trash' ? 3 : (outcome.category === 'glutinous' ? 9 : 18);
+            for (let s = 0; s < clueDensity; s++) {
+                const sx = cx + Math.sin(s * 12 + seed) * (radiusX * 0.55);
+                const sy = cy + Math.cos(s * 17 + seed) * (radiusY * 0.55);
+                crustLayerCtx.beginPath();
+                crustLayerCtx.arc(sx, sy, 3 + (s % 4), 0, Math.PI * 2);
+                crustLayerCtx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+                crustLayerCtx.fill();
+            }
+
+            // 石頭外輪廓高光邊線
+            traceStonePath(crustLayerCtx);
+            crustLayerCtx.lineWidth = 4;
+            crustLayerCtx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+            crustLayerCtx.stroke();
+            crustLayerCtx.restore();
+        }
+
+        function traceStonePath(context) {
+            if (!stonePolygon.length) return;
+            context.beginPath();
+            context.moveTo(stonePolygon[0].x, stonePolygon[0].y);
+            for (let i = 1; i < stonePolygon.length; i++) {
+                context.lineTo(stonePolygon[i].x, stonePolygon[i].y);
+            }
+            context.closePath();
+        }
+
+        function setTool(tool) {
+            state.currentTool = tool;
+            const btnFlash = document.getElementById('tool-flashlight');
+            const btnRub = document.getElementById('tool-rub');
+            const flashHint = document.getElementById('flashlight-hint');
+            const rubBox = document.getElementById('rub-progress-box');
+
+            if (tool === 'flashlight') {
+                btnFlash.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-1 bg-emerald-600 border-emerald-300 text-white shadow-lg shadow-emerald-500/30';
+                btnRub.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-1 bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700';
+                flashHint.classList.remove('hidden');
+                rubBox.classList.add('hidden');
+            } else {
+                btnRub.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-1 bg-amber-600 border-amber-200 text-white shadow-lg shadow-amber-500/30';
+                btnFlash.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-1 bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700';
+                flashHint.classList.add('hidden');
+                rubBox.classList.remove('hidden');
+            }
+        }
+
+        // 擦石磨皮動作 (destination-out 擦除頂層石皮)
+        let lastRubSoundTime = 0;
+        function scratchCrust(x, y) {
+            if (!state.activeStone || state.activeStone.revealed) return;
+
+            crustLayerCtx.save();
+            crustLayerCtx.globalCompositeOperation = 'destination-out';
+            const brushGrad = crustLayerCtx.createRadialGradient(x, y, 4, x, y, 24);
+            brushGrad.addColorStop(0, 'rgba(0,0,0,1)');
+            brushGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            crustLayerCtx.fillStyle = brushGrad;
+            crustLayerCtx.beginPath();
+            crustLayerCtx.arc(x, y, 24, 0, Math.PI * 2);
+            crustLayerCtx.fill();
+            crustLayerCtx.restore();
+
+            // 產生石粉與玉屑粒子
+            for (let i = 0; i < 4; i++) {
+                particles.push({
+                    x,
+                    y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.8) * 4,
+                    life: 1,
+                    color: Math.random() > 0.5 ? '#d1d5db' : state.activeStone.outcome.primaryColor
+                });
+            }
+
+            // 節流播放磨石音效
+            const now = Date.now();
+            if (now - lastRubSoundTime > 90) {
+                playSound('rub');
+                lastRubSoundTime = now;
+            }
+
+            // 更新開窗進度條
+            state.rubProgress = Math.min(100, state.rubProgress + 1.4);
+            const pct = Math.round(state.rubProgress);
+            document.getElementById('rub-percent').textContent = `${pct}%`;
+            document.getElementById('rub-bar').style.width = `${pct}%`;
+
+            // 若磨開超過 72%，自動完整切開並結算
+            if (pct >= 72) {
+                cutStoneCompletely();
+            }
+        }
+
+        // 主渲染迴圈
+        function renderLoop() {
+            const rect = canvas.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            if (state.activeStone) {
+                // 1. 畫出石頭底部陰影
+                ctx.save();
+                ctx.translate(0, 14);
+                traceStonePath(ctx);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+                ctx.filter = 'blur(10px)';
+                ctx.fill();
+                ctx.restore();
+
+                // 2. 繪製底層玉肉
+                ctx.drawImage(jadeLayerCanvas, 0, 0);
+
+                // 3. 繪製尚未被磨掉的外部石皮
+                ctx.drawImage(crustLayerCanvas, 0, 0);
+
+                // 4. 若目前為「打燈看水頭」模式且指標在畫布內，渲染強光手電筒透光效應
+                if (state.currentTool === 'flashlight' && pointerPos.active && !state.activeStone.revealed) {
+                    const outcome = state.activeStone.outcome;
+                    ctx.save();
+                    traceStonePath(ctx);
+                    ctx.clip();
+
+                    // 根據內部玉石品質決定透光範圍與顏色 (廢料幾乎不透光，帝王綠散發強烈碧綠光暈)
+                    const lightRadius = outcome.category === 'trash' ? 36 : (outcome.category === 'glutinous' ? 68 : 105);
+                    const lightGrad = ctx.createRadialGradient(
+                        pointerPos.x, pointerPos.y, 4,
+                        pointerPos.x, pointerPos.y, lightRadius
+                    );
+                    lightGrad.addColorStop(0, '#ffffff');
+                    lightGrad.addColorStop(0.25, outcome.glowColor);
+                    lightGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.fillStyle = lightGrad;
+                    ctx.beginPath();
+                    ctx.arc(pointerPos.x, pointerPos.y, lightRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    // 手電筒外圈光環指示器
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(pointerPos.x, pointerPos.y, 22, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // 5. 繪製飛濺粒子特效
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15;
+                p.life -= 0.035;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    ctx.globalAlpha = p.life;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            animFrameId = requestAnimationFrame(renderLoop);
+        }
+
+        // --- 6. 滑鼠與觸控事件綁定 ---
+        let isPointerDown = false;
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            isPointerDown = true;
+            const pos = getCanvasCoords(e);
+            pointerPos = { ...pos, active: true };
+            if (state.currentTool === 'rub') {
+                scratchCrust(pos.x, pos.y);
+            }
         });
-      }
 
-      const cracks = [];
-      const crackCount = grade.id === 'imperial' ? 1 : 2 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < crackCount; i++) {
-        const sx = (Math.random() - 0.5) * 160;
-        const sy = (Math.random() - 0.5) * 110;
-        cracks.push({
-          x1: sx,
-          y1: sy,
-          x2: sx + (Math.random() - 0.5) * 95,
-          y2: sy + (Math.random() - 0.5) * 75
+        canvas.addEventListener('pointermove', (e) => {
+            const pos = getCanvasCoords(e);
+            pointerPos = { ...pos, active: true };
+            if (isPointerDown && state.currentTool === 'rub') {
+                scratchCrust(pos.x, pos.y);
+            }
         });
-      }
 
-      const hasPythonBand = grade.mult >= 2.1 && Math.random() > 0.35;
-      const hasPineFlower = grade.mult >= 0.75 && Math.random() > 0.3;
-
-      return {
-        id: 'ST-' + Math.floor(1000 + Math.random() * 9000),
-        origin,
-        weight,
-        price,
-        bargained: false,
-        grade,
-        vertices,
-        colorZones,
-        cracks,
-        hasPythonBand,
-        hasPineFlower,
-        inspectGlow: false
-      };
-    }
-
-    function initMarket(free = true) {
-      if (!free) {
-        if (state.money < 800) {
-          pushDanmaku('系統提示', '資金不足 ¥800，無法刷新公盤！', 'text-rose-400');
-          return;
-        }
-        state.money -= 800;
-        updateTopHUD();
-      }
-      state.marketStones = Array.from({ length: 6 }, (_, i) => generateStone(i));
-      renderMarketGrid();
-    }
-
-    // ==================== 5. 離屏泥層與皮殼層初始化 ====================
-    function prepareStoneLayers(stone) {
-      const cx = 430, cy = 260;
-      // 1. 繪製皮殼層 (crustCanvas)
-      crustCtx.clearRect(0, 0, 860, 520);
-      crustCtx.save();
-      crustCtx.translate(cx, cy);
-      traceStonePath(crustCtx, stone.vertices);
-      crustCtx.fillStyle = stone.origin.skin;
-      crustCtx.fill();
-      crustCtx.clip();
-
-      // 砂粒紋理
-      for (let i = 0; i < 900; i++) {
-        const px = (Math.random() - 0.5) * 320;
-        const py = (Math.random() - 0.5) * 250;
-        crustCtx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.18)';
-        crustCtx.fillRect(px, py, 2.5, 2.5);
-      }
-
-      // 蟒帶與松花表現
-      if (stone.hasPythonBand) {
-        crustCtx.strokeStyle = 'rgba(110, 155, 110, 0.35)';
-        crustCtx.lineWidth = 14;
-        crustCtx.beginPath();
-        crustCtx.moveTo(-110, -30);
-        crustCtx.quadraticCurveTo(0, 25, 115, -15);
-        crustCtx.stroke();
-      }
-      if (stone.hasPineFlower) {
-        for (let i = 0; i < 18; i++) {
-          crustCtx.fillStyle = 'rgba(52, 211, 153, 0.45)';
-          crustCtx.beginPath();
-          crustCtx.arc((Math.random() - 0.5) * 160, (Math.random() - 0.5) * 110, 2 + Math.random() * 2.5, 0, Math.PI * 2);
-          crustCtx.fill();
-        }
-      }
-      crustCtx.restore();
-
-      // 2. 繪製泥沙外層 (mudCanvas)
-      mudCtx.clearRect(0, 0, 860, 520);
-      mudCtx.save();
-      mudCtx.translate(cx, cy);
-      traceStonePath(mudCtx, stone.vertices);
-      mudCtx.fillStyle = '#7c5d38';
-      mudCtx.fill();
-      mudCtx.clip();
-
-      for (let i = 0; i < 650; i++) {
-        mudCtx.fillStyle = Math.random() > 0.5 ? 'rgba(62, 43, 22, 0.35)' : 'rgba(175, 140, 92, 0.3)';
-        mudCtx.beginPath();
-        mudCtx.arc((Math.random() - 0.5) * 320, (Math.random() - 0.5) * 250, 3 + Math.random() * 6, 0, Math.PI * 2);
-        mudCtx.fill();
-      }
-      mudCtx.restore();
-    }
-
-    function traceStonePath(c, vertices) {
-      c.beginPath();
-      vertices.forEach((v, i) => {
-        if (i === 0) c.moveTo(v.x, v.y);
-        else c.lineTo(v.x, v.y);
-      });
-      c.closePath();
-    }
-
-    // ==================== 6. 核心畫布渲染迴圈 ====================
-    function resizeCanvas() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = 860;
-      canvas.height = 520;
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    function renderLoop() {
-      ctx.clearRect(0, 0, 860, 520);
-
-      // 繪製機台刻度線裝飾
-      drawWorkbenchGuides();
-
-      if (!state.currentStone) {
-        drawEmptyTableHint();
-      } else if (!state.isCut) {
-        drawUncutStone();
-      } else {
-        drawCutTwoHalves();
-      }
-
-      // 繪製粒子效果（水花 / 火花 / 玉屑）
-      updateAndDrawParticles();
-
-      requestAnimationFrame(renderLoop);
-    }
-
-    function drawWorkbenchGuides() {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
-      for (let x = 40; x < 860; x += 40) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, 520);
-        ctx.stroke();
-      }
-      for (let y = 40; y < 520; y += 40) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(860, y);
-        ctx.stroke();
-      }
-      // 中央定位十字
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.16)';
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(430, 30);
-      ctx.lineTo(430, 490);
-      ctx.moveTo(80, 260);
-      ctx.lineTo(780, 260);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function drawEmptyTableHint() {
-      ctx.save();
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
-      ctx.beginPath();
-      ctx.arc(430, 260, 85, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
-      ctx.setLineDash([8, 6]);
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.fillStyle = '#d6d3d1';
-      ctx.font = 'bold 16px "Noto Sans TC"';
-      ctx.textAlign = 'center';
-      ctx.fillText('機台空置中 · 點擊下方按鈕前往公盤選石', 430, 265);
-      ctx.restore();
-    }
-
-    function drawJadeMeatInside(targetCtx, stone, offsetX, offsetY, scale = 1) {
-      targetCtx.save();
-      targetCtx.translate(offsetX, offsetY);
-      targetCtx.scale(scale, scale);
-      traceStonePath(targetCtx, stone.vertices);
-      targetCtx.clip();
-
-      // 底色玉肉
-      const grad = targetCtx.createRadialGradient(0, 0, 15, 0, 0, 165);
-      grad.addColorStop(0, stone.grade.glow);
-      grad.addColorStop(0.65, stone.grade.color);
-      grad.addColorStop(1, '#1f2937');
-      targetCtx.fillStyle = grad;
-      targetCtx.fillRect(-200, -200, 400, 400);
-
-      // 色根光暈
-      stone.colorZones.forEach(z => {
-        const zg = targetCtx.createRadialGradient(z.x, z.y, 4, z.x, z.y, z.r);
-        zg.addColorStop(0, 'rgba(6, 95, 70, 0.92)');
-        zg.addColorStop(0.6, 'rgba(16, 185, 129, 0.55)');
-        zg.addColorStop(1, 'rgba(16, 185, 129, 0)');
-        targetCtx.fillStyle = zg;
-        targetCtx.beginPath();
-        targetCtx.arc(z.x, z.y, z.r, 0, Math.PI * 2);
-        targetCtx.fill();
-      });
-
-      // 雪花棉或光澤高光
-      targetCtx.fillStyle = 'rgba(255, 255, 255, 0.14)';
-      targetCtx.beginPath();
-      targetCtx.ellipse(-40, -35, 65, 22, -0.35, 0, Math.PI * 2);
-      targetCtx.fill();
-
-      // 裂紋繪製
-      targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-      targetCtx.lineWidth = 1.6;
-      stone.cracks.forEach(c => {
-        targetCtx.beginPath();
-        targetCtx.moveTo(c.x1, c.y1);
-        targetCtx.lineTo((c.x1 + c.x2) / 2 + 6, (c.y1 + c.y2) / 2 - 5);
-        targetCtx.lineTo(c.x2, c.y2);
-        targetCtx.stroke();
-      });
-
-      targetCtx.restore();
-    }
-
-    function drawUncutStone() {
-      const stone = state.currentStone;
-      const cx = 430, cy = 260;
-
-      // 投影陰影
-      ctx.save();
-      ctx.translate(cx + 10, cy + 16);
-      traceStonePath(ctx, stone.vertices);
-      ctx.fillStyle = 'rgba(0,0,0,0.55)';
-      ctx.fill();
-      ctx.restore();
-
-      // 1. 底層玉肉（擦窗後會露出來）
-      drawJadeMeatInside(ctx, stone, cx, cy, 1);
-
-      // 2. 皮殼層（可被角磨機擦除）
-      ctx.drawImage(crustCanvas, 0, 0);
-
-      // 3. 泥沙層（可被沖水刷除）
-      ctx.drawImage(mudCanvas, 0, 0);
-
-      // 外輪廓描邊
-      ctx.save();
-      ctx.translate(cx, cy);
-      traceStonePath(ctx, stone.vertices);
-      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.restore();
-
-      // 步驟 2：強光壓燈透光效果
-      if (state.step === 2) {
-        const px = state.pointer.x;
-        const py = state.pointer.y;
-        const lightRadius = 45 + stone.grade.transparency * 75;
-        const lg = ctx.createRadialGradient(px, py, 5, px, py, lightRadius);
-        lg.addColorStop(0, '#ffffff');
-        lg.addColorStop(0.28, stone.grade.glow);
-        lg.addColorStop(0.7, stone.grade.color + '88');
-        lg.addColorStop(1, 'rgba(0,0,0,0)');
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = lg;
-        ctx.beginPath();
-        ctx.arc(px, py, lightRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // 手電筒外框指示圈
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(px, py, 16, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // 步驟 4：畫切割紅線
-      if (state.step === 4) {
-        if (state.cutLine) {
-          ctx.save();
-          ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 4;
-          ctx.setLineDash([10, 6]);
-          ctx.beginPath();
-          ctx.moveTo(state.cutLine.x1, state.cutLine.y1);
-          ctx.lineTo(state.cutLine.x2, state.cutLine.y2);
-          ctx.stroke();
-          ctx.restore();
-        } else {
-          // 預設推薦虛線
-          ctx.save();
-          ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([6, 6]);
-          ctx.beginPath();
-          ctx.moveTo(430, 115);
-          ctx.lineTo(430, 405);
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
-    }
-
-    function drawCutTwoHalves() {
-      const stone = state.currentStone;
-      if (state.cutAnimProgress < 1) {
-        state.cutAnimProgress = Math.min(1, state.cutAnimProgress + 0.04);
-      }
-      const ease = 1 - Math.pow(1 - state.cutAnimProgress, 3);
-      const sep = ease * 175;
-
-      // 左切面（蓋子）
-      drawHalfPiece(430 - sep, 260, stone, '左切面 · 明料蓋子', true);
-      // 右切面（主料手鐲位）
-      drawHalfPiece(430 + sep, 260, stone, '右切面 · 主料取鐲區', false);
-
-      // 繪製已確定畫上的手鐲圈
-      state.bangles.forEach((b, idx) => {
-        drawBangleRing(b.x, b.y, b.r, '#f59e0b', `手鐲 #${idx + 1} (${b.label})`);
-      });
-
-      // 步驟 5：正在拖曳預覽的手鐲圈
-      if (state.step === 5 && state.bangles.length < 3) {
-        const pb = state.previewBangle;
-        const evalRes = evaluateBangleAt(pb.x, pb.y, pb.r);
-        const ringColor = evalRes.hitsCrack ? '#ef4444' : (evalRes.greenScore > 0.5 ? '#10b981' : '#38bdf8');
-        drawBangleRing(pb.x, pb.y, pb.r, ringColor, evalRes.label);
-      }
-    }
-
-    function drawHalfPiece(cx, cy, stone, caption, isMirror) {
-      ctx.save();
-      // 外圈皮殼邊緣
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(isMirror ? -0.96 : 0.96, 0.96);
-      traceStonePath(ctx, stone.vertices);
-      ctx.fillStyle = stone.origin.crust;
-      ctx.fill();
-      ctx.restore();
-
-      // 內部切開玉肉
-      drawJadeMeatInside(ctx, stone, cx, cy, isMirror ? -0.90 : 0.90);
-
-      // 切面高光玻璃質感
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(isMirror ? -0.90 : 0.90, 0.90);
-      traceStonePath(ctx, stone.vertices);
-      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      ctx.restore();
-
-      // 底部標籤
-      ctx.fillStyle = 'rgba(12, 10, 9, 0.8)';
-      ctx.fillRect(cx - 80, cy + 128, 160, 24);
-      ctx.fillStyle = '#fde68a';
-      ctx.font = 'bold 12px "Noto Sans TC"';
-      ctx.textAlign = 'center';
-      ctx.fillText(caption, cx, cy + 144);
-      ctx.restore();
-    }
-
-    function drawBangleRing(x, y, r, color, label) {
-      ctx.save();
-      const innerR = r * 0.72;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(x, y, innerR, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // 半透明環帶填充
-      ctx.fillStyle = color + '33';
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2, false);
-      ctx.arc(x, y, innerR, 0, Math.PI * 2, true);
-      ctx.fill();
-
-      // 標籤
-      ctx.fillStyle = 'rgba(0,0,0,0.82)';
-      ctx.fillRect(x - 54, y - r - 22, 108, 18);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px "Noto Sans TC"';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, x, y - r - 9);
-      ctx.restore();
-    }
-
-    // ==================== 7. 粒子系統 ====================
-    function spawnParticles(x, y, color, count = 6) {
-      for (let i = 0; i < count; i++) {
-        state.particles.push({
-          x,
-          y,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.8) * 6,
-          life: 1,
-          color
+        window.addEventListener('pointerup', () => {
+            isPointerDown = false;
         });
-      }
-    }
 
-    function updateAndDrawParticles() {
-      for (let i = state.particles.length - 1; i >= 0; i--) {
-        const p = state.particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.25;
-        p.life -= 0.045;
-        if (p.life <= 0) {
-          state.particles.splice(i, 1);
-          continue;
+        canvas.addEventListener('pointerleave', () => {
+            pointerPos.active = false;
+        });
+
+        window.addEventListener('resize', () => {
+            if (state.activeStone && !state.activeStone.revealed) {
+                resizeAndBuildStoneLayers();
+            }
+        });
+
+        // --- 7. 一刀切開與結算彈窗 ---
+        function cutStoneCompletely() {
+            if (!state.activeStone || state.activeStone.revealed) return;
+            state.activeStone.revealed = true;
+
+            // 清除全部頂層石皮，完整露出內部玉肉
+            crustLayerCtx.clearRect(0, 0, crustLayerCanvas.width, crustLayerCanvas.height);
+
+            // 畫面震動與音效
+            const panel = document.getElementById('workshop-panel');
+            panel.classList.add('shake-active');
+            playSound('cut');
+
+            // 爆發大量慶祝粒子
+            const cx = crustLayerCanvas.width / 2;
+            const cy = crustLayerCanvas.height / 2;
+            for (let i = 0; i < 45; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 6;
+                particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.3,
+                    color: i % 2 === 0 ? '#fde047' : state.activeStone.outcome.primaryColor
+                });
+            }
+
+            setTimeout(() => {
+                panel.classList.remove('shake-active');
+                openResultModal(state.activeStone.outcome);
+            }, 520);
         }
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    }
 
-    // ==================== 8. 互動事件處理（滑鼠與觸控） ====================
-    function getCanvasCoords(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: ((clientX - rect.left) / rect.width) * 860,
-        y: ((clientY - rect.top) / rect.height) * 520
-      };
-    }
+        function openResultModal(outcome) {
+            const modal = document.getElementById('result-modal');
+            const isProfit = outcome.finalValue >= outcome.cost;
+            const isBigWin = outcome.finalValue >= outcome.cost * 2;
 
-    function handlePointerDown(e) {
-      if (!state.currentStone) return;
-      const pos = getCanvasCoords(e);
-      state.pointer.down = true;
-      state.pointer.x = pos.x;
-      state.pointer.y = pos.y;
-      state.pointer.startX = pos.x;
-      state.pointer.startY = pos.y;
+            // 播放對應音效
+            if (isBigWin || outcome.category === 'imperial' || outcome.category === 'mutton') {
+                playSound('rare');
+                document.getElementById('result-rays').classList.remove('hidden');
+            } else if (!isProfit) {
+                playSound('fail');
+                document.getElementById('result-rays').classList.add('hidden');
+            } else {
+                playSound('coin');
+                document.getElementById('result-rays').classList.add('hidden');
+            }
 
-      if (state.step === 4 && !state.isCut) {
-        state.cutLine = { x1: pos.x, y1: pos.y, x2:
+            // 設定印章文字與顏色
+            const stamp = document.getElementById('result-verdict-stamp');
+            if (outcome.finalValue >= outcome.cost * 3) {
+                stamp.textContent = '驚天暴漲！';
+                stamp.className = 'stamp-badge text-xl sm:text-2xl text-amber-300';
+            } else if (isProfit) {
+                stamp.textContent = '切漲大賺！';
+                stamp.className = 'stamp-badge text-lg sm:text-xl text-emerald-300';
+            } else {
+                stamp.textContent = '切垮了...';
+                stamp.className = 'stamp-badge text-lg sm:text-xl text-rose-400';
+            }
+
+            // 玉石球體外觀
+            const orb = document.getElementById('result-jade-orb');
+            orb.style.background = `radial-gradient(circle at 30% 30%, ${outcome.secondaryColor}, ${outcome.primaryColor})`;
+            orb.style.boxShadow = `0 0 35px ${outcome.glowColor}`;
+            document.getElementById('result-emoji').textContent = outcome.emoji;
+
+            const badge = document.getElementById('result-rarity-badge');
+            badge.textContent = outcome.rarityLabel;
+            badge.className = `inline-block px-3 py-0.5 rounded-full text-xs font-bold mb-1 ${outcome.rarityClass}`;
+
+            document.getElementById('result-name').textContent = outcome.name;
+            document.getElementById('result-trait').textContent = `品相：${outcome.traitLabel}・重 ${outcome.weightLiang} 兩`;
+            document.getElementById('result-desc').textContent = outcome.desc;
+            document.getElementById('result-cost').textContent = `${outcome.cost} 碎銀`;
+            document.getElementById('result-value').textContent = `${outcome.finalValue.toLocaleString()} 碎銀`;
+            document.getElementById('sell-btn-sub').textContent = `+${outcome.finalValue.toLocaleString()} 碎銀`;
+
+            // 解鎖圖鑑紀錄
+            if (!state.unlockedIds.includes(outcome.id)) {
+                state.unlockedIds.push(outcome.id);
+                saveGame();
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function resetWorkshopAfterSettlement() {
+            document.getElementById('result-modal').classList.add('hidden');
+            state.activeStone = null;
+            canvas.classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('hidden');
+            document.getElementById('tool-bar').classList.add('hidden');
+            document.getElementById('flashlight-hint').classList.add('hidden');
+            document.getElementById('rub-progress-box').classList.add('hidden');
+            document.getElementById('btn-cut-now').disabled = true;
+            document.getElementById('workshop-title').textContent = '⚒️ 解石工坊';
+            document.getElementById('workshop-subtitle').textContent = '請先從左側原石攤挑選一顆原石開切';
+            document.getElementById('stone-clue-tag').textContent = '等待選石...';
+
+            // 自動刷新一顆新原石到攤位並更新狀態
+            generateMarketOffers();
+            updateUIHeader();
+            saveGame();
+        }
+
+        function sellJadeNow() {
+            if (!state.activeStone) return;
+            const val = state.activeStone.outcome.finalValue;
+            state.coins += val;
+            playSound('coin');
+            showToast(`成交！獲得 ${val.toLocaleString()} 碎銀`);
+            resetWorkshopAfterSettlement();
+        }
+
+        function collectToGallery() {
+            if (!state.activeStone) return;
+            const item = {
+                ...state.activeStone.outcome,
+                vaultId: `vault_${Date.now()}`
+            };
+            state.vault.unshift(item);
+            playSound('rare');
+            showToast(`已將【${item.name}】供奉入珍寶閣！`);
+            resetWorkshopAfterSettlement();
+        }
+
+        // --- 8. 珍寶閣 (圖鑑與收藏拍賣) ---
+        function openGalleryModal() {
+            renderGallery();
+            document.getElementById('gallery-modal').classList.remove('hidden');
+        }
+
+        function closeGalleryModal() {
+            document.getElementById('gallery-modal').classList.add('hidden');
+        }
+
+        function renderGallery() {
+            document.getElementById('pokedex-count').textContent = `${state.unlockedIds.length}/${JADE_CATALOG.length}`;
+            const totalVaultVal = state.vault.reduce((sum, item) => sum + item.finalValue, 0);
+            document.getElementById('vault-total-value').textContent = totalVaultVal.toLocaleString();
+
+            // 渲染 8 種圖鑑卡片
+            const pokedexGrid = document.getElementById('pokedex-grid');
+            pokedexGrid.innerHTML = '';
+            JADE_CATALOG.forEach(jade => {
+                const isUnlocked = state.unlockedIds.includes(jade.id);
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border text-center transition ${
+                    isUnlocked 
+                        ? 'bg-emerald-950/70 border-amber-400/40' 
+                        : 'bg-black/50 border-white/10 opacity-50'
+                }`;
+                card.innerHTML = `
+                    <div class="text-3xl mb-1">${isUnlocked ? jade.emoji : '❓'}</div>
+                    <div class="text-[10px] font-bold ${isUnlocked ? 'text-amber-300' : 'text-slate-500'}">${isUnlocked ? jade.rarityLabel : '尚未鑑定'}</div>
+                    <div class="font-serif-tc text-xs font-bold text-white mt-0.5 truncate">${isUnlocked ? jade.name : '未知玉種'}</div>
+                `;
+                pokedexGrid.appendChild(card);
+            });
+
+            // 渲染私人典藏清單
+            const vaultGrid = document.getElementById('vault-grid');
+            vaultGrid.innerHTML = '';
+            if (state.vault.length === 0) {
+                vaultGrid.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6 bg-black/30 rounded-xl">珍寶閣暫無藏品，切出極品翡翠時可選擇「收入珍寶閣」！</p>`;
+                return;
+            }
+
+            state.vault.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between gap-2 p-3 rounded-xl bg-black/40 border border-emerald-500/25';
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="text-2xl">${item.emoji}</span>
+                        <div class="truncate">
+                            <p class="font-serif-tc text-sm font-bold text-amber-200 truncate">${item.name}</p>
+                            <p class="text-[11px] text-emerald-300/80">${item.traitLabel}・${item.weightLiang}兩</p>
+                        </div>
+                    </div>
+                    <button onclick="sellVaultItem(${idx})" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 border border-amber-400/40 text-amber-200 text-xs font-bold whitespace-nowrap transition">
+                        拍賣 +${item.finalValue}
+                    </button>
+                `;
+                vaultGrid.appendChild(row);
+            });
+        }
+
+        function sellVaultItem(index) {
+            const item = state.vault[index];
+            if (!item) return;
+            state.coins += item.finalValue;
+            state.vault.splice(index, 1);
+            playSound('coin');
+            saveGame();
+            updateUIHeader();
+            renderGallery();
+            renderMarket();
+            showToast(`已拍賣【${item.name}】，進帳 ${item.finalValue} 碎銀！`);
+        }
+
+        // --- 9. 破產救濟與輔助 UI ---
+        function updateUIHeader() {
+            document.getElementById('coin-display').textContent = state.coins.toLocaleString();
+            document.getElementById('gallery-badge').textContent = state.vault.length;
+
+            // 若碎銀低於最便宜原石 (100) 且沒有正在切的原石，顯示救濟金按鈕
+            const btnSubsidy = document.getElementById('btn-subsidy');
+            if (state.coins < 100 && !state.activeStone) {
+                btnSubsidy.classList.remove('hidden');
+            } else {
+                btnSubsidy.classList.add('hidden');
+            }
+        }
+
+        function claimSubsidy() {
+            state.coins += 300;
+            playSound('coin');
+            saveGame();
+            updateUIHeader();
+            renderMarket();
+            showToast('商會會長賞識您的毅力，資助 300 碎銀東山再起！');
+        }
+
+        function openGithubModal() {
+            document.getElementById('github-modal').classList.remove('hidden');
+        }
+
+        function closeGithubModal() {
+            document.getElementById('github-modal').classList.add('hidden');
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-emerald-950/95 border border-amber-400/60 text-amber-100 px-4 py-2 rounded-full text-xs sm:text-sm font-medium shadow-xl backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0';
+            toast.textContent = msg;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 2400);
+        }
+
+        // --- 10. 遊戲初始化 ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            updateUIHeader();
+            generateMarketOffers();
+        });
+    </script>
+</body>
+</html>
