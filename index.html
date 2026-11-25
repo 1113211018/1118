@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>翡翠神眼 · 3D Low Poly 畫線賭石切玉</title>
+<title>翡翠神眼 · 3D Low Poly 畫線賭石切玉（流暢優化版）</title>
 <style>
   :root {
     --bg-dark: #0a0f0d;
-    --bg-panel: rgba(20, 30, 26, 0.88);
-    --bg-card: rgba(29, 43, 38, 0.92);
+    --bg-panel: rgba(18, 28, 24, 0.96);
+    --bg-card: #1a2722;
     --border-gold: #c6a15b;
     --border-subtle: #2e423a;
     --jade-bright: #2ecc71;
@@ -29,195 +29,139 @@
 
   body {
     font-family: "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif;
-    background: #0a0f0d;
+    background: radial-gradient(circle at top, #13211b 0%, #090e0c 100%);
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
-    position: relative;
   }
 
-  /* 全螢幕 Three.js Low Poly 景深背景畫布 */
-  #bg-3d-canvas {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  /* 螢幕閃光與震動容器 (Game Juice) */
+  /* 螢幕閃光與震動容器 */
   #screen-flash {
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 999;
     opacity: 0;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.75) 0%, rgba(46, 204, 113, 0.35) 100%);
-    transition: opacity 0.18s ease-out;
+    transition: opacity 0.16s ease-out;
   }
 
   @keyframes screenShake {
     0%, 100% { transform: translate3d(0, 0, 0); }
-    20% { transform: translate3d(-6px, 4px, 0); }
-    40% { transform: translate3d(6px, -4px, 0); }
-    60% { transform: translate3d(-4px, -3px, 0); }
-    80% { transform: translate3d(4px, 3px, 0); }
+    25% { transform: translate3d(-5px, 3px, 0); }
+    50% { transform: translate3d(5px, -3px, 0); }
+    75% { transform: translate3d(-3px, -2px, 0); }
   }
 
   .shake-active {
-    animation: screenShake 0.32s var(--ease-spring);
+    animation: screenShake 0.28s var(--ease-spring);
   }
 
-  /* Motion Design: 入口選單與轉場遮罩 */
+  /* 入口選單 (零 blur 高效能轉場) */
   #entry-menu {
     position: fixed;
     inset: 0;
     z-index: 100;
-    background: radial-gradient(circle at center, rgba(16, 28, 23, 0.72) 0%, rgba(8, 13, 11, 0.94) 100%);
-    backdrop-filter: blur(8px);
+    background: radial-gradient(circle at center, #14241e 0%, #080d0b 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 24px;
-    transition: opacity 0.45s var(--ease-spring), transform 0.45s var(--ease-spring);
+    transition: opacity 0.35s var(--ease-spring), transform 0.35s var(--ease-spring);
   }
 
   #entry-menu.menu-exit {
     opacity: 0;
-    transform: scale(1.06);
+    transform: scale(1.04);
     pointer-events: none;
   }
 
-  @keyframes floatUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .menu-stagger-1 { animation: floatUp 0.6s var(--ease-spring) 0.05s both; }
-  .menu-stagger-2 { animation: floatUp 0.6s var(--ease-spring) 0.15s both; }
-  .menu-stagger-3 { animation: floatUp 0.6s var(--ease-spring) 0.25s both; }
-  .menu-stagger-4 { animation: floatUp 0.6s var(--ease-spring) 0.35s both; }
-
   .entry-emblem {
-    width: 84px;
-    height: 84px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #6ef7a7, #0e6338);
     border: 3px solid var(--border-gold);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.4rem;
+    font-size: 2.3rem;
     font-weight: bold;
     color: #fff;
-    box-shadow: 0 0 35px rgba(46, 204, 113, 0.6), inset 0 0 15px rgba(255,255,255,0.4);
-    margin-bottom: 18px;
+    box-shadow: 0 0 28px rgba(46, 204, 113, 0.5);
+    margin-bottom: 16px;
   }
 
   .entry-title {
-    font-size: clamp(2rem, 4vw, 3rem);
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
     color: var(--gold-text);
-    letter-spacing: 6px;
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-    margin-bottom: 10px;
+    letter-spacing: 5px;
+    margin-bottom: 8px;
   }
 
   .entry-sub {
     color: var(--text-muted);
-    font-size: 1.05rem;
-    letter-spacing: 3px;
-    margin-bottom: 32px;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    margin-bottom: 28px;
   }
 
   .btn-start-game {
     background: linear-gradient(135deg, #d4a64f, #8a6424);
     border: 2px solid #f7dc99;
     color: #111;
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     font-weight: bold;
-    padding: 14px 44px;
+    padding: 13px 42px;
     border-radius: 999px;
     cursor: pointer;
     letter-spacing: 3px;
-    box-shadow: 0 8px 28px rgba(198, 161, 91, 0.45);
-    transition: transform 0.18s var(--ease-bounce), box-shadow 0.18s var(--ease-spring);
   }
 
-  .btn-start-game:hover {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 12px 34px rgba(198, 161, 91, 0.65);
-  }
-
-  .btn-start-game:active {
-    transform: scale(0.95);
-  }
-
-  /* 過關 / 失敗 / 暴富轉場橫幅 */
+  /* 過關 / 暴富轉場橫幅 */
   #stage-banner {
     position: fixed;
-    top: 84px;
+    top: 78px;
     left: 50%;
-    transform: translateX(-50%) translateY(-30px) scale(0.9);
+    transform: translateX(-50%) translateY(-20px);
     z-index: 90;
-    padding: 12px 32px;
+    padding: 10px 28px;
     border-radius: 999px;
     font-weight: bold;
-    font-size: 1.1rem;
-    letter-spacing: 2px;
+    font-size: 1.05rem;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s var(--ease-spring), transform 0.35s var(--ease-bounce);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+    transition: opacity 0.22s ease, transform 0.28s var(--ease-bounce);
   }
 
   #stage-banner.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0);
   }
 
   #stage-banner.win {
-    background: linear-gradient(135deg, #155736, #0d3822);
+    background: #12472c;
     border: 1.5px solid #4ade80;
     color: #bbf7d0;
   }
 
   #stage-banner.loss {
-    background: linear-gradient(135deg, #691b1b, #3b0d0d);
+    background: #591717;
     border: 1.5px solid #f87171;
     color: #fecaca;
   }
 
-  /* 主遊戲容器 */
-  #game-shell {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.4s var(--ease-spring), transform 0.4s var(--ease-spring);
-  }
-
-  #game-shell.active {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
   button {
-    transition: transform 0.14s var(--ease-bounce), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    transition: transform 0.12s var(--ease-bounce), background 0.15s ease;
   }
 
   button:active:not(:disabled) {
-    transform: scale(0.94) !important;
+    transform: scale(0.95) !important;
   }
 
   header {
-    background: rgba(12, 18, 16, 0.86);
-    backdrop-filter: blur(10px);
+    background: #0d1411;
     border-bottom: 1px solid var(--border-gold);
     padding: 12px 24px;
     display: flex;
@@ -225,7 +169,6 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
     position: sticky;
     top: 0;
     z-index: 30;
@@ -239,8 +182,8 @@
   }
 
   .brand-badge {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #6ef7a7, #106b3d);
     border: 2px solid var(--border-gold);
@@ -249,18 +192,16 @@
     justify-content: center;
     font-weight: bold;
     color: #fff;
-    font-size: 17px;
-    box-shadow: 0 0 15px rgba(46, 204, 113, 0.45);
   }
 
   .brand h1 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     color: var(--gold-text);
     letter-spacing: 2px;
   }
 
   .brand span {
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     color: var(--text-muted);
     display: block;
   }
@@ -268,40 +209,37 @@
   .stats-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
   }
 
   .stat-pill {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    padding: 6px 14px;
+    padding: 6px 13px;
     border-radius: 999px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
 
   .stat-pill strong {
     color: var(--gold-text);
     font-family: "Consolas", monospace;
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     display: inline-block;
   }
 
   @keyframes scorePop {
     0% { transform: scale(1); }
-    45% { transform: scale(1.26); color: #4ade80; }
+    50% { transform: scale(1.22); color: #4ade80; }
     100% { transform: scale(1); }
   }
 
   .score-pop {
-    animation: scorePop 0.35s var(--ease-bounce);
+    animation: scorePop 0.3s var(--ease-bounce);
   }
 
   .btn-header {
-    background: rgba(29, 43, 38, 0.9);
+    background: #1d2b26;
     border: 1px solid var(--border-gold);
     color: var(--gold-text);
     padding: 6px 12px;
@@ -316,27 +254,22 @@
     font-weight: bold;
   }
 
-  /* Game Juice 控制台浮動面板 */
+  /* Game Juice 控制台 */
   #juice-drawer {
     position: fixed;
-    top: 68px;
+    top: 64px;
     right: 24px;
-    width: 280px;
-    background: rgba(15, 23, 20, 0.95);
-    backdrop-filter: blur(12px);
+    width: 270px;
+    background: #121c18;
     border: 1px solid var(--border-gold);
     border-radius: 12px;
-    padding: 16px;
+    padding: 15px;
     z-index: 60;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.75);
-    transform-origin: top right;
-    transition: opacity 0.22s var(--ease-spring), transform 0.22s var(--ease-spring);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.8);
   }
 
   #juice-drawer.hidden-drawer {
-    opacity: 0;
-    transform: scale(0.9) translateY(-10px);
-    pointer-events: none;
+    display: none;
   }
 
   .juice-row {
@@ -344,25 +277,21 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    font-size: 0.85rem;
-    color: var(--text-main);
+    font-size: 0.84rem;
   }
 
   .juice-row input[type="range"] {
-    width: 115px;
+    width: 110px;
     accent-color: var(--jade-bright);
-    cursor: pointer;
   }
 
-  /* 主排版 */
   main {
-    flex: 1;
     max-width: 1260px;
     width: 100%;
     margin: 0 auto;
     padding: 18px 20px;
     display: grid;
-    grid-template-columns: 1fr 330px;
+    grid-template-columns: 1fr 320px;
     gap: 20px;
   }
 
@@ -372,11 +301,9 @@
 
   .panel {
     background: var(--bg-panel);
-    backdrop-filter: blur(10px);
     border: 1px solid var(--border-subtle);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
   }
 
   .panel-header {
@@ -391,7 +318,7 @@
   }
 
   .panel-title {
-    font-size: 1.12rem;
+    font-size: 1.1rem;
     color: var(--gold-text);
     letter-spacing: 1.5px;
   }
@@ -408,46 +335,38 @@
     padding: 6px 14px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
   }
 
   .tab-btn.active {
-    background: linear-gradient(135deg, #1b4d36, #113323);
+    background: #18422e;
     border-color: var(--border-gold);
     color: var(--gold-text);
     font-weight: bold;
   }
 
-  /* 公盤卡片與進場節奏 */
+  /* 公盤市場 */
   .market-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
-    gap: 16px;
-  }
-
-  @keyframes cardPopIn {
-    from { opacity: 0; transform: translateY(14px) scale(0.97); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    gap: 15px;
   }
 
   .stone-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
-    padding: 15px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
-    overflow: hidden;
-    animation: cardPopIn 0.36s var(--ease-spring) backwards;
-    transition: transform 0.2s var(--ease-spring), border-color 0.2s, box-shadow 0.2s;
+    transition: transform 0.16s ease, border-color 0.16s ease;
   }
 
   .stone-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     border-color: var(--border-gold);
-    box-shadow: 0 8px 22px rgba(198, 161, 91, 0.22);
   }
 
   .stone-tag {
@@ -455,50 +374,50 @@
     top: 10px;
     right: 10px;
     font-size: 0.72rem;
-    padding: 3px 8px;
+    padding: 2px 8px;
     border-radius: 4px;
-    background: rgba(0, 0, 0, 0.6);
+    background: #0d1411;
     color: var(--gold-text);
     border: 1px solid rgba(198, 161, 91, 0.4);
   }
 
   .stone-preview {
     width: 100%;
-    height: 110px;
+    height: 105px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .stone-info h3 {
-    font-size: 1.02rem;
-    margin-bottom: 5px;
+    font-size: 1rem;
+    margin-bottom: 4px;
     color: #fff;
   }
 
   .stone-meta {
-    font-size: 0.8rem;
+    font-size: 0.79rem;
     color: var(--text-muted);
-    margin-bottom: 9px;
+    margin-bottom: 8px;
   }
 
   .clue-box {
-    background: rgba(10, 16, 14, 0.8);
+    background: #0f1814;
     border-left: 3px solid var(--jade-bright);
-    padding: 7px 10px;
-    font-size: 0.79rem;
+    padding: 7px 9px;
+    font-size: 0.78rem;
     color: #b8e6cb;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     border-radius: 0 6px 6px 0;
-    min-height: 44px;
+    min-height: 42px;
     line-height: 1.4;
   }
 
   .card-actions {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
   }
 
   .inspect-row {
@@ -507,13 +426,13 @@
   }
 
   button.action-btn {
-    padding: 7px 9px;
+    padding: 7px 8px;
     border-radius: 6px;
     border: 1px solid var(--border-subtle);
     background: #23332d;
     color: var(--text-main);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.79rem;
     flex: 1;
   }
 
@@ -532,22 +451,18 @@
     border: 1px solid #f0cf85;
     color: #111;
     font-weight: bold;
-    font-size: 0.9rem;
-    padding: 9px;
+    font-size: 0.88rem;
+    padding: 8px;
     border-radius: 6px;
     cursor: pointer;
   }
 
-  button.buy-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #d4a64f, #9e742b);
-  }
-
-  /* 3D 切石工坊舞台 + 畫線疊加層 */
+  /* 3D 切石工坊 */
   .workshop-stage {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
   }
 
   .tool-mode-bar {
@@ -555,7 +470,6 @@
     gap: 8px;
     width: 100%;
     max-width: 620px;
-    justify-content: center;
   }
 
   .mode-btn {
@@ -565,52 +479,44 @@
     border: 1px solid var(--border-subtle);
     background: #1b2823;
     color: var(--text-muted);
-    font-size: 0.86rem;
+    font-size: 0.85rem;
     cursor: pointer;
     font-weight: bold;
   }
 
   .mode-btn.active {
-    background: linear-gradient(135deg, #2b453b, #1a2e26);
+    background: #243b32;
     border-color: var(--gold-text);
     color: var(--gold-text);
-    box-shadow: 0 0 12px rgba(232, 199, 123, 0.25);
   }
 
   .canvas-wrapper {
     position: relative;
     width: 100%;
     max-width: 620px;
-    height: 330px;
+    height: 320px;
     background: radial-gradient(circle at center, #1b2823 0%, #0b100e 100%);
     border: 2px solid var(--border-gold);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.85), 0 8px 24px rgba(0, 0, 0, 0.5);
     touch-action: none;
   }
 
-  #workshop3dCanvas {
+  #workshop3dCanvas, #drawLineCanvas {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: block;
   }
 
   #drawLineCanvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
     z-index: 5;
     cursor: crosshair;
   }
 
   #drawLineCanvas.rotate-cursor {
     cursor: grab;
-  }
-
-  #drawLineCanvas.rotate-cursor:active {
-    cursor: grabbing;
   }
 
   .canvas-hint {
@@ -621,7 +527,7 @@
     text-align: center;
     font-size: 0.78rem;
     color: #fde68a;
-    background: rgba(0, 0, 0, 0.62);
+    background: rgba(0, 0, 0, 0.72);
     padding: 5px 10px;
     border-radius: 6px;
     pointer-events: none;
@@ -637,46 +543,44 @@
   }
 
   .btn-cut-window {
-    background: linear-gradient(135deg, #1d6f8a, #124859);
+    background: #175c73;
     border: 1px solid #5bc0de;
     color: #fff;
-    padding: 11px 20px;
+    padding: 10px 18px;
     border-radius: 8px;
-    font-size: 0.94rem;
+    font-size: 0.92rem;
     font-weight: bold;
     cursor: pointer;
   }
 
   .btn-cut-full {
-    background: linear-gradient(135deg, #1e8449, #11522c);
+    background: #19703d;
     border: 1px solid #58d68d;
     color: #fff;
-    padding: 11px 24px;
+    padding: 10px 22px;
     border-radius: 8px;
-    font-size: 0.94rem;
+    font-size: 0.92rem;
     font-weight: bold;
     cursor: pointer;
   }
 
   .result-banner {
     width: 100%;
-    background: rgba(14, 21, 18, 0.92);
+    background: #101815;
     border: 1px solid var(--border-gold);
     border-radius: 10px;
-    padding: 16px;
+    padding: 15px;
     text-align: center;
-    animation: cardPopIn 0.35s var(--ease-spring);
   }
 
   .result-grade {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     font-weight: bold;
     margin-bottom: 6px;
-    letter-spacing: 2px;
   }
 
-  .grade-帝王綠 { color: #2ecc71; text-shadow: 0 0 14px rgba(46, 204, 113, 0.8); }
-  .grade-高冰種 { color: #76d7c4; text-shadow: 0 0 10px rgba(118, 215, 196, 0.6); }
+  .grade-帝王綠 { color: #2ecc71; }
+  .grade-高冰種 { color: #76d7c4; }
   .grade-糯冰種 { color: #a9dfbf; }
   .grade-豆種 { color: #d5dbdb; }
   .grade-垮料 { color: #e74c3c; }
@@ -685,35 +589,35 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 10px;
-    margin-top: 14px;
+    margin-top: 12px;
   }
 
   .offer-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
-    padding: 12px;
+    padding: 11px;
     text-align: center;
   }
 
   .offer-card h4 {
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     color: var(--gold-text);
     margin-bottom: 4px;
   }
 
   .offer-price {
-    font-size: 1.12rem;
+    font-size: 1.1rem;
     font-weight: bold;
     color: #58d68d;
-    margin: 6px 0;
+    margin: 5px 0;
     font-family: "Consolas", monospace;
   }
 
-  /* 珍寶閣收藏 */
+  /* 珍寶閣 */
   .collection-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 12px;
   }
 
@@ -723,15 +627,13 @@
     border-radius: 8px;
     padding: 12px;
     text-align: center;
-    animation: cardPopIn 0.3s var(--ease-spring);
   }
 
   .treasure-orb {
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     margin: 0 auto 8px;
-    border: 2px solid #fff3;
   }
 
   /* 右側欄位 */
@@ -742,8 +644,8 @@
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     padding: 12px;
-    font-size: 0.86rem;
-    line-height: 1.55;
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 
   .log-list {
@@ -751,45 +653,40 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding-right: 4px;
+    gap: 7px;
   }
 
   .log-entry {
-    background: rgba(14, 21, 18, 0.78);
+    background: #101815;
     border-left: 3px solid var(--border-gold);
-    padding: 8px 10px;
-    font-size: 0.8rem;
-    line-height: 1.45;
-    border-radius: 0 6px 6px 0;
+    padding: 7px 9px;
+    font-size: 0.79rem;
+    line-height: 1.4;
+    border-radius: 0 5px 5px 0;
   }
 
   .log-entry.win { border-left-color: #2ecc71; }
   .log-entry.loss { border-left-color: #e74c3c; }
 
-  /* 浮動得分跳字 (Game Juice) */
   .floating-score {
     position: fixed;
     pointer-events: none;
     z-index: 998;
     font-family: "Consolas", monospace;
     font-weight: bold;
-    font-size: 1.25rem;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.9);
-    animation: floatScoreUp 0.9s var(--ease-spring) forwards;
+    font-size: 1.2rem;
+    animation: floatScoreUp 0.8s ease-out forwards;
   }
 
   @keyframes floatScoreUp {
-    0% { opacity: 1; transform: translateY(0) scale(0.8); }
-    30% { transform: translateY(-16px) scale(1.15); }
-    100% { opacity: 0; transform: translateY(-48px) scale(0.95); }
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-42px); }
   }
 
-  /* GitHub Modal */
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.78);
+    background: rgba(0, 0, 0, 0.8);
     display: none;
     align-items: center;
     justify-content: center;
@@ -803,12 +700,12 @@
     border-radius: 12px;
     max-width: 600px;
     width: 100%;
-    padding: 22px;
+    padding: 20px;
   }
 
   .modal-box h3 { color: var(--gold-text); margin-bottom: 10px; }
-  .modal-box p, .modal-box li { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; }
-  .modal-box ol { padding-left: 20px; margin-bottom: 14px; }
+  .modal-box p, .modal-box li { font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 8px; }
+  .modal-box ol { padding-left: 20px; margin-bottom: 12px; }
 
   .code-snippet {
     background: #080c0a;
@@ -816,11 +713,11 @@
     padding: 10px;
     border-radius: 6px;
     font-family: monospace;
-    font-size: 0.76rem;
+    font-size: 0.75rem;
     color: #82e0aa;
-    max-height: 130px;
+    max-height: 120px;
     overflow: auto;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     white-space: pre-wrap;
     word-break: break-all;
   }
@@ -830,55 +727,34 @@
 </head>
 <body>
 
-<!-- 全螢幕 Three.js Low Poly 景深背景 -->
-<canvas id="bg-3d-canvas"></canvas>
-
-<!-- 螢幕閃光層 -->
 <div id="screen-flash"></div>
-
-<!-- 過關 / 暴富 / 切垮 轉場橫幅 -->
 <div id="stage-banner"></div>
 
-<!-- 1. Motion Design 入口選單 -->
+<!-- 入口選單 -->
 <div id="entry-menu">
-  <div class="entry-emblem menu-stagger-1">翠</div>
-  <h1 class="entry-title menu-stagger-2">翡翠神眼 · 3D 公盤</h1>
-  <p class="entry-sub menu-stagger-3">LOW POLY 畫線賭石切玉模擬器</p>
-  <button class="btn-start-game menu-stagger-4" onclick="enterGame()">進入緬甸公盤</button>
+  <div class="entry-emblem">翠</div>
+  <h1 class="entry-title">翡翠神眼 · 3D 公盤</h1>
+  <p class="entry-sub">LOW POLY 畫線賭石切玉模擬器</p>
+  <button class="btn-start-game" onclick="enterGame()">進入緬甸公盤</button>
 </div>
 
-<!-- 2. Game Juice 控制台面板 -->
+<!-- Game Juice 控制台 -->
 <div id="juice-drawer" class="hidden-drawer">
-  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px; margin-bottom:12px;">
-    <strong style="color:var(--gold-text); font-size:0.92rem;">🎛️ Game Juice 控制台</strong>
+  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px; margin-bottom:10px;">
+    <strong style="color:var(--gold-text); font-size:0.9rem;">🎛️ Game Juice 控制台</strong>
     <button class="action-btn" style="flex:none; padding:2px 8px;" onclick="toggleJuiceDrawer()">✕</button>
   </div>
-  <div class="juice-row">
-    <span>✨ 總開關</span>
-    <input type="checkbox" id="juice-master" checked onchange="updateJuiceConfig()" />
-  </div>
-  <div class="juice-row">
-    <span>🎆 切石粒子量</span>
-    <input type="range" id="juice-particles" min="0" max="2" step="0.1" value="1" oninput="updateJuiceConfig()" />
-  </div>
-  <div class="juice-row">
-    <span>📳 鏡頭震動</span>
-    <input type="range" id="juice-shake" min="0" max="2" step="0.1" value="1" oninput="updateJuiceConfig()" />
-  </div>
-  <div class="juice-row">
-    <span>⚡ 短暫閃光</span>
-    <input type="checkbox" id="juice-flash" checked onchange="updateJuiceConfig()" />
-  </div>
-  <div class="juice-row">
-    <span>🔊 合成音效</span>
-    <input type="checkbox" id="juice-sound" checked onchange="updateJuiceConfig()" />
-  </div>
+  <div class="juice-row"><span>✨ 總開關</span><input type="checkbox" id="juice-master" checked onchange="updateJuiceConfig()" /></div>
+  <div class="juice-row"><span>🎆 切石粒子量</span><input type="range" id="juice-particles" min="0" max="2" step="0.1" value="1" oninput="updateJuiceConfig()" /></div>
+  <div class="juice-row"><span>📳 鏡頭震動</span><input type="range" id="juice-shake" min="0" max="2" step="0.1" value="1" oninput="updateJuiceConfig()" /></div>
+  <div class="juice-row"><span>⚡ 短暫閃光</span><input type="checkbox" id="juice-flash" checked onchange="updateJuiceConfig()" /></div>
+  <div class="juice-row"><span>🔊 合成音效</span><input type="checkbox" id="juice-sound" checked onchange="updateJuiceConfig()" /></div>
 </div>
 
-<!-- 3. 主遊戲介面 -->
+<!-- 主遊戲介面 -->
 <div id="game-shell">
   <header>
-    <div class="brand" onclick="returnToMenu()" title="返回主選單">
+    <div class="brand" onclick="returnToMenu()">
       <div class="brand-badge">翠</div>
       <div>
         <h1>翡翠神眼 · 賭石切玉</h1>
@@ -909,7 +785,7 @@
       <!-- 原石市場 -->
       <div id="view-market">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-          <span style="font-size:0.86rem; color:var(--text-muted);">觀察皮殼、蟒帶與松花，善用鑑定工具後果斷出手！</span>
+          <span style="font-size:0.85rem; color:var(--text-muted);">觀察皮殼、蟒帶與松花，善用鑑定工具後果斷出手！</span>
           <button class="action-btn" style="flex:none; padding:7px 14px;" onclick="refreshMarket(true, event)">🔄 換一批新料 ($1,500)</button>
         </div>
         <div class="market-grid" id="market-grid"></div>
@@ -918,20 +794,19 @@
       <!-- 3D 切石工坊 -->
       <div id="view-workshop" class="hidden">
         <div id="workshop-empty" style="text-align:center; padding:50px 20px; color:var(--text-muted);">
-          <p style="font-size:1.08rem; margin-bottom:14px;">目前 3D 切石台上沒有原石</p>
+          <p style="font-size:1.05rem; margin-bottom:14px;">目前 3D 切石台上沒有原石</p>
           <button class="buy-btn" style="padding:10px 24px;" onclick="switchTab('market')">前往公盤挑選原石</button>
         </div>
 
         <div id="workshop-active" class="workshop-stage hidden">
           <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
-              <h3 id="ws-stone-name" style="color:var(--gold-text); font-size:1.12rem;"></h3>
-              <span id="ws-stone-desc" style="font-size:0.82rem; color:var(--text-muted);"></span>
+              <h3 id="ws-stone-name" style="color:var(--gold-text); font-size:1.1rem;"></h3>
+              <span id="ws-stone-desc" style="font-size:0.8rem; color:var(--text-muted);"></span>
             </div>
-            <span id="ws-cost-badge" class="stat-pill" style="font-size:0.84rem;"></span>
+            <span id="ws-cost-badge" class="stat-pill" style="font-size:0.82rem;"></span>
           </div>
 
-          <!-- 工具模式切換列：畫線 vs 旋轉 -->
           <div class="tool-mode-bar" id="tool-mode-bar">
             <button class="mode-btn active" id="mode-draw" onclick="setWorkshopMode('draw')">🖍️ 畫線下刀模式</button>
             <button class="mode-btn" id="mode-rotate" onclick="setWorkshopMode('rotate')">🔄 360° 旋轉鑑賞</button>
@@ -948,21 +823,21 @@
             <button class="btn-cut-window" onclick="performCut('window', event)">
               🪚 磨皮擦石（開窗）<br><small style="font-weight:normal; opacity:0.85;">風險低 · 可先賣半明料 ($800)</small>
             </button>
-            <button class="btn-cut-full" id="btn-cut-line" onclick="performCut('full', event)">
+            <button class="btn-cut-full" onclick="performCut('full', event)">
               ⚡ 沿紅線一刀切開！<br><small style="font-weight:normal; opacity:0.85;">先畫線決定下刀方位 · 釋放價值</small>
             </button>
           </div>
 
           <div id="result-panel" class="result-banner hidden">
             <div class="result-grade" id="res-title"></div>
-            <p id="res-detail" style="font-size:0.88rem; color:var(--text-main); margin-bottom:6px;"></p>
-            <p id="res-profit" style="font-size:0.94rem; font-weight:bold;"></p>
+            <p id="res-detail" style="font-size:0.86rem; color:var(--text-main); margin-bottom:6px;"></p>
+            <p id="res-profit" style="font-size:0.92rem; font-weight:bold;"></p>
 
             <div class="offers-grid" id="offers-grid"></div>
 
-            <div style="margin-top:14px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            <div style="margin-top:12px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
               <button id="btn-continue-cut" class="btn-cut-full hidden" onclick="prepareCutAfterWindow()">🔥 畫線一刀全切博大漲！</button>
-              <button id="btn-keep-treasure" class="action-btn" style="flex:none; padding:9px 16px; border-color:var(--gold-text); color:var(--gold-text);" onclick="keepInCollection(event)">🏛️ 收入私人珍寶閣</button>
+              <button id="btn-keep-treasure" class="action-btn" style="flex:none; padding:8px 16px; border-color:var(--gold-text); color:var(--gold-text);" onclick="keepInCollection(event)">🏛️ 收入私人珍寶閣</button>
             </div>
           </div>
         </div>
@@ -970,14 +845,14 @@
 
       <!-- 珍寶閣 -->
       <div id="view-collection" class="hidden">
-        <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:14px;">
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">
           將切出的極品翡翠收入珍寶閣，可永久提升聲望並吸引頂級藏家出更高價。
         </p>
         <div class="collection-grid" id="collection-grid"></div>
       </div>
     </section>
 
-    <!-- 右側資訊與日誌 -->
+    <!-- 右側欄位 -->
     <aside class="panel">
       <div class="sidebar-section">
         <div class="panel-header">
@@ -1001,7 +876,7 @@
 <div class="modal-backdrop" id="github-modal">
   <div class="modal-box">
     <h3>🚀 一鍵部署到 GitHub Pages</h3>
-    <p>本遊戲已整合 Three.js Low Poly 3D 場景、親手畫線切石與 Game Juice 系統，為純前端單檔架構：</p>
+    <p>本遊戲已針對流暢度最佳化，為純前端單檔架構：</p>
     <ol>
       <li>在 GitHub 建立一個新的公開 Repository（例如 <code>jade-3d-cut-game</code>）。</li>
       <li>點擊下方<strong>「複製完整 HTML 原始碼」</strong>，建立 <code>index.html</code> 並貼上儲存。</li>
@@ -1015,23 +890,18 @@
   </div>
 </div>
 
-<!-- 引入 Three.js 與後處理模組 (r187) -->
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+    "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"
   }
 }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 
-// ==================== Game Juice 控制台設定 ====================
+// ==================== Game Juice 控制台 ====================
 const JuiceConfig = {
   enabled: true,
   particles: 1.0,
@@ -1052,12 +922,12 @@ window.updateJuiceConfig = () => {
   JuiceConfig.sound = document.getElementById('juice-sound').checked;
 };
 
-function triggerFlash(color = 'rgba(255,255,255,0.65)') {
+function triggerFlash(color = 'rgba(255,255,255,0.55)') {
   if (!JuiceConfig.enabled || !JuiceConfig.flash) return;
   const el = document.getElementById('screen-flash');
-  el.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 75%)`;
+  el.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 70%)`;
   el.style.opacity = '1';
-  setTimeout(() => { el.style.opacity = '0'; }, 140);
+  setTimeout(() => { el.style.opacity = '0'; }, 130);
 }
 
 function triggerShake(intensity = 1) {
@@ -1065,7 +935,7 @@ function triggerShake(intensity = 1) {
   const shell = document.getElementById('game-shell');
   shell.classList.remove('shake-active');
   void shell.offsetWidth;
-  shell.style.animationDuration = `${0.25 + 0.1 * intensity * JuiceConfig.shake}s`;
+  shell.style.animationDuration = `${0.22 + 0.08 * intensity * JuiceConfig.shake}s`;
   shell.classList.add('shake-active');
 }
 
@@ -1078,7 +948,7 @@ function spawnFloatingText(text, x, y, color = '#4ade80') {
   el.style.top = `${y}px`;
   el.style.color = color;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 920);
+  setTimeout(() => el.remove(), 820);
 }
 
 function showStageBanner(text, type = 'win') {
@@ -1088,10 +958,10 @@ function showStageBanner(text, type = 'win') {
   clearTimeout(banner._timer);
   banner._timer = setTimeout(() => {
     banner.classList.remove('show');
-  }, 2400);
+  }, 2200);
 }
 
-// ==================== 音效合成器 (Web Audio API) ====================
+// ==================== 音效合成器 ====================
 const AudioFX = {
   ctx: null,
   init() {
@@ -1104,30 +974,14 @@ const AudioFX = {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(620, now);
-    osc.frequency.exponentialRampToValueAtTime(300, now + 0.06);
-    gain.gain.setValueAtTime(0.06, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.07);
-  },
-  playChalk() {
-    if (!JuiceConfig.enabled || !JuiceConfig.sound) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(920, now);
-    osc.frequency.exponentialRampToValueAtTime(520, now + 0.04);
-    gain.gain.setValueAtTime(0.03, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.05);
+    osc.stop(now + 0.06);
   },
   playSaw() {
     if (!JuiceConfig.enabled || !JuiceConfig.sound) return;
@@ -1137,30 +991,29 @@ const AudioFX = {
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(150, now);
-    osc.frequency.linearRampToValueAtTime(340, now + 0.4);
-    osc.frequency.linearRampToValueAtTime(200, now + 0.85);
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+    osc.frequency.linearRampToValueAtTime(320, now + 0.35);
+    gain.gain.setValueAtTime(0.07, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.9);
+    osc.stop(now + 0.42);
   },
   playSuccess() {
     if (!JuiceConfig.enabled || !JuiceConfig.sound) return;
     this.init();
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-      const now = this.ctx.currentTime + i * 0.08;
+      const now = this.ctx.currentTime + i * 0.07;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(f, now);
-      gain.gain.setValueAtTime(0.11, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start(now);
-      osc.stop(now + 0.42);
+      osc.stop(now + 0.36);
     });
   },
   playFail() {
@@ -1170,120 +1023,27 @@ const AudioFX = {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(160, now);
-    osc.frequency.linearRampToValueAtTime(75, now + 0.45);
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.linearRampToValueAtTime(75, now + 0.4);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.5);
+    osc.stop(now + 0.45);
   }
 };
 
-// ==================== 1. Three.js Low Poly 景深背景場景 ====================
-function initBackground3D() {
-  const canvas = document.getElementById('bg-3d-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a110e);
-  scene.fog = new THREE.FogExp2(0x0a110e, 0.032);
-
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 7, 18);
-  camera.lookAt(0, 1, 0);
-
-  const hemiLight = new THREE.HemisphereLight(0x88c9a1, 0x101814, 0.7);
-  scene.add(hemiLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffe7ba, 1.4);
-  dirLight.position.set(8, 16, 10);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.set(1024, 1024);
-  scene.add(dirLight);
-
-  const rimLight = new THREE.PointLight(0x2ecc71, 4.5, 28);
-  rimLight.position.set(-7, 5, -6);
-  scene.add(rimLight);
-
-  const terrainGeo = new THREE.PlaneGeometry(60, 60, 24, 24);
-  terrainGeo.rotateX(-Math.PI / 2);
-  const pos = terrainGeo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const z = pos.getZ(i);
-    const dist = Math.hypot(x, z);
-    const y = dist > 7 ? (Math.sin(x * 0.35) * Math.cos(z * 0.35) * 2.4 + (dist - 7) * 0.18) : -0.5;
-    pos.setY(i, y);
-  }
-  terrainGeo.computeVertexNormals();
-  const terrainMat = new THREE.MeshStandardMaterial({
-    color: 0x13221c,
-    roughness: 0.88,
-    flatShading: true
-  });
-  const terrain = new THREE.Mesh(terrainGeo, terrainMat);
-  terrain.receiveShadow = true;
-  scene.add(terrain);
-
-  const floatStones = [];
-  const rockMat = new THREE.MeshStandardMaterial({ color: 0x2a3b34, roughness: 0.75, flatShading: true });
-  const jadeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x064e3b, roughness: 0.25, flatShading: true });
-
-  for (let i = 0; i < 16; i++) {
-    const geo = new THREE.DodecahedronGeometry(0.45 + Math.random() * 0.75, 0);
-    const mesh = new THREE.Mesh(geo, i % 4 === 0 ? jadeMat : rockMat);
-    const angle = (i / 16) * Math.PI * 2;
-    const radius = 6.5 + Math.random() * 9;
-    mesh.position.set(Math.cos(angle) * radius, 1.2 + Math.random() * 4.5, Math.sin(angle) * radius - 3);
-    mesh.castShadow = true;
-    scene.add(mesh);
-    floatStones.push({ mesh, speed: 0.3 + Math.random() * 0.5, baseY: mesh.position.y, phase: Math.random() * 6.28 });
-  }
-
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  const bokehPass = new BokehPass(scene, camera, { focus: 17.5, aperture: 0.00018, maxblur: 0.006 });
-  composer.addPass(bokehPass);
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  const clock = new THREE.Clock();
-  function animateBg() {
-    requestAnimationFrame(animateBg);
-    const t = clock.getElapsedTime();
-    floatStones.forEach(item => {
-      item.mesh.rotation.x = t * 0.25 * item.speed;
-      item.mesh.rotation.y = t * 0.35 * item.speed;
-      item.mesh.position.y = item.baseY + Math.sin(t * item.speed + item.phase) * 0.35;
-    });
-    camera.position.x = Math.sin(t * 0.12) * 1.4;
-    camera.lookAt(0, 1.5, 0);
-    composer.render();
-  }
-  animateBg();
-}
-
-// ==================== 2. 畫線互動層與 3D Low Poly 切石工坊 ====================
+// ==================== 畫線互動層 ====================
 const CutLineDrawer = {
   canvas: null,
   ctx: null,
-  mode: 'draw', // 'draw' | 'rotate'
+  mode: 'draw',
   isPointerDown: false,
   points: [],
   hasValidLine: false,
-  cutAngle: 0,     // 畫線斜率角度 (弧度)
-  centerOffset: 0, // 切線距離原石中心的偏移程度 (0 = 正中央, 1 = 邊緣)
+  cutAngle: 0,
+  centerOffset: 0,
 
   init() {
     this.canvas = document.getElementById('drawLineCanvas');
@@ -1301,7 +1061,6 @@ const CutLineDrawer = {
         Workshop3D.isDragging = true;
         Workshop3D.prevX = e.clientX;
       } else {
-        // 開始畫新切割線
         this.points = [{ x, y }];
         this.hasValidLine = false;
         this.renderLine();
@@ -1313,15 +1072,14 @@ const CutLineDrawer = {
       if (this.mode === 'rotate') {
         const dx = e.clientX - Workshop3D.prevX;
         Workshop3D.prevX = e.clientX;
-        Workshop3D.targetRotY += dx * 0.012;
+        Workshop3D.targetRotY += dx * 0.014;
       } else {
         const rect = this.canvas.getBoundingClientRect();
         const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
         const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
         const last = this.points[this.points.length - 1];
-        if (last && Math.hypot(x - last.x, y - last.y) > 4) {
+        if (last && Math.hypot(x - last.x, y - last.y) > 5) {
           this.points.push({ x, y });
-          if (this.points.length % 4 === 0) AudioFX.playChalk();
           this.renderLine();
         }
       }
@@ -1336,26 +1094,21 @@ const CutLineDrawer = {
         const p1 = this.points[0];
         const p2 = this.points[this.points.length - 1];
         const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        if (dist >= 55) {
+        if (dist >= 50) {
           this.hasValidLine = true;
-          // 計算切割線角度 (相對於垂直線的偏角)
           this.cutAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x) - Math.PI / 2;
-
-          // 計算切線中點距離畫布原石中心的偏移程度
           const cx = this.canvas.width / 2;
           const cy = this.canvas.height / 2;
           const midX = (p1.x + p2.x) / 2;
           const midY = (p1.y + p2.y) / 2;
-          const distFromCenter = Math.hypot(midX - cx, midY - cy);
-          this.centerOffset = Math.min(1, distFromCenter / 115);
-
+          this.centerOffset = Math.min(1, Math.hypot(midX - cx, midY - cy) / 115);
           this.renderLine();
-          const qualityHint = this.centerOffset < 0.35
+
+          document.getElementById('canvas-hint').textContent = this.centerOffset < 0.35
             ? '🎯 切線精準貫穿原石核心（滿肉取料，估值加成！）'
             : this.centerOffset < 0.7
               ? '✂️ 切線角度適中，可點擊下方「沿紅線一刀切開」'
               : '⚠️ 切線偏離中心較遠（擦邊切，取肉體積較小）';
-          document.getElementById('canvas-hint').textContent = qualityHint;
         } else {
           this.clear();
           document.getElementById('canvas-hint').textContent = '⚠️ 畫線太短啦！請從原石一側劃穿到另一側。';
@@ -1391,30 +1144,15 @@ const CutLineDrawer = {
     const p1 = this.points[0];
     const p2 = this.points[this.points.length - 1];
 
-    // 繪製玩家手繪軌跡
     this.ctx.save();
-    this.ctx.beginPath();
-    this.ctx.moveTo(p1.x, p1.y);
-    for (let i = 1; i < this.points.length; i++) {
-      this.ctx.lineTo(this.points[i].x, this.points[i].y);
-    }
-    this.ctx.strokeStyle = 'rgba(248, 113, 113, 0.5)';
-    this.ctx.lineWidth = 4;
-    this.ctx.lineCap = 'round';
-    this.ctx.stroke();
-
-    // 繪製校準後的筆直油切鋸線 (紅白虛線 + 兩端準星)
     this.ctx.beginPath();
     this.ctx.moveTo(p1.x, p1.y);
     this.ctx.lineTo(p2.x, p2.y);
     this.ctx.strokeStyle = '#ef4444';
     this.ctx.lineWidth = 3;
     this.ctx.setLineDash([10, 6]);
-    this.ctx.shadowColor = '#ef4444';
-    this.ctx.shadowBlur = 12;
     this.ctx.stroke();
 
-    // 兩端進刀點標記
     [p1, p2].forEach(pt => {
       this.ctx.setLineDash([]);
       this.ctx.beginPath();
@@ -1431,9 +1169,7 @@ window.setWorkshopMode = (mode) => {
   CutLineDrawer.mode = mode;
   document.getElementById('mode-draw').classList.toggle('active', mode === 'draw');
   document.getElementById('mode-rotate').classList.toggle('active', mode === 'rotate');
-  const drawCanvas = document.getElementById('drawLineCanvas');
-  drawCanvas.classList.toggle('rotate-cursor', mode === 'rotate');
-
+  document.getElementById('drawLineCanvas').classList.toggle('rotate-cursor', mode === 'rotate');
   document.getElementById('canvas-hint').textContent = mode === 'draw'
     ? '🖍️ 請在原石上按住拖曳畫出一道「紅色切割線」，決定下刀角度與位置！'
     : '🖱️ 左右拖曳可 360° 旋轉觀察原石皮殼，選好面後切換回「畫線下刀模式」';
@@ -1455,6 +1191,7 @@ window.prepareCutAfterWindow = () => {
   setWorkshopMode('draw');
 };
 
+// ==================== 高效能單一 Three.js Low Poly 切石舞台 ====================
 const Workshop3D = {
   scene: null,
   camera: null,
@@ -1464,129 +1201,120 @@ const Workshop3D = {
   targetRotY: 0,
   isDragging: false,
   prevX: 0,
+  isRunning: false,
 
   init() {
+    if (this.scene) return;
     const canvas = document.getElementById('workshop3dCanvas');
     const w = canvas.clientWidth || 600;
-    const h = canvas.clientHeight || 330;
+    const h = canvas.clientHeight || 320;
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.setSize(w, h);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 50);
-    this.camera.position.set(0, 2.6, 6.2);
-    this.camera.lookAt(0, 0.3, 0);
+    this.scene.fog = new THREE.FogExp2(0x0b100e, 0.06);
 
-    const ambient = new THREE.AmbientLight(0xdff5e8, 0.55);
+    this.camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 40);
+    this.camera.position.set(0, 2.5, 6.0);
+    this.camera.lookAt(0, 0.2, 0);
+
+    // 柔和光 + 輪廓光 (Rim Light)
+    const ambient = new THREE.AmbientLight(0xdff5e8, 0.65);
     this.scene.add(ambient);
 
-    const keyLight = new THREE.DirectionalLight(0xfff0d4, 1.5);
+    const keyLight = new THREE.DirectionalLight(0xfff0d4, 1.45);
     keyLight.position.set(4, 7, 5);
-    keyLight.castShadow = true;
     this.scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x34d399, 2.2);
+    const rimLight = new THREE.DirectionalLight(0x34d399, 2.0);
     rimLight.position.set(-4, 3, -5);
     this.scene.add(rimLight);
 
-    const tableGeo = new THREE.CylinderGeometry(2.5, 2.8, 0.4, 8);
+    // Low Poly 切石工作台底座
+    const tableGeo = new THREE.CylinderGeometry(2.4, 2.7, 0.38, 8);
     const tableMat = new THREE.MeshStandardMaterial({
       color: 0x1c2824,
-      roughness: 0.7,
-      metalness: 0.2,
+      roughness: 0.75,
       flatShading: true
     });
     const table = new THREE.Mesh(tableGeo, tableMat);
     table.position.y = -1.15;
-    table.receiveShadow = true;
     this.scene.add(table);
 
     this.stoneGroup = new THREE.Group();
     this.scene.add(this.stoneGroup);
 
-    this.loop();
+    if (!this.isRunning) {
+      this.isRunning = true;
+      this.loop();
+    }
   },
 
   buildStone(stone, cutAngle = 0, centerOffset = 0) {
-    if (!this.scene) this.init();
+    this.init();
     while (this.stoneGroup.children.length > 0) {
       this.stoneGroup.remove(this.stoneGroup.children[0]);
     }
     this.stoneGroup.rotation.set(0, this.targetRotY, 0);
 
-    const skinColor = new THREE.Color(stone.origin.color);
-    const jadeColor = new THREE.Color(stone.trueGrade.color);
-    const glowColor = new THREE.Color(stone.trueGrade.glow);
-
     const skinMat = new THREE.MeshStandardMaterial({
-      color: skinColor,
+      color: new THREE.Color(stone.origin.color),
       roughness: 0.85,
       flatShading: true
     });
 
-    const jadeMat = new THREE.MeshPhysicalMaterial({
-      color: jadeColor,
-      emissive: glowColor,
-      emissiveIntensity: stone.trueGrade.id === '垮料' ? 0.05 : 0.45,
-      roughness: stone.trueGrade.id === '垮料' ? 0.85 : 0.15,
-      metalness: 0.05,
-      clearcoat: stone.trueGrade.id === '垮料' ? 0 : 0.9,
+    const jadeMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(stone.trueGrade.color),
+      emissive: new THREE.Color(stone.trueGrade.glow),
+      emissiveIntensity: stone.trueGrade.id === '垮料' ? 0.05 : 0.4,
+      roughness: stone.trueGrade.id === '垮料' ? 0.85 : 0.22,
+      metalness: 0.1,
       flatShading: true
     });
 
     if (stone.cutStage === 'raw' || stone.cutStage === 'window') {
-      const geo = new THREE.IcosahedronGeometry(1.25, 1);
+      const geo = new THREE.IcosahedronGeometry(1.22, 1);
       const pos = geo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
-        const vx = pos.getX(i);
-        const vy = pos.getY(i);
-        const vz = pos.getZ(i);
-        const n = 1 + Math.sin(vx * 3.1 + vy * 2.3) * 0.12;
-        pos.setXYZ(i, vx * n * 1.15, vy * n * 0.9, vz * n);
+        const vx = pos.getX(i), vy = pos.getY(i), vz = pos.getZ(i);
+        const n = 1 + Math.sin(vx * 3.1 + vy * 2.3) * 0.11;
+        pos.setXYZ(i, vx * n * 1.14, vy * n * 0.9, vz * n);
       }
       geo.computeVertexNormals();
-      const rockMesh = new THREE.Mesh(geo, skinMat);
-      rockMesh.castShadow = true;
-      rockMesh.receiveShadow = true;
-      this.stoneGroup.add(rockMesh);
+      this.stoneGroup.add(new THREE.Mesh(geo, skinMat));
 
       if (stone.cutStage === 'window') {
-        const winGeo = new THREE.DodecahedronGeometry(0.68, 0);
+        const winGeo = new THREE.DodecahedronGeometry(0.66, 0);
         const winMesh = new THREE.Mesh(winGeo, jadeMat);
-        winMesh.position.set(0, 0.25, 0.82);
+        winMesh.position.set(0, 0.22, 0.8);
         winMesh.scale.set(1.1, 0.8, 0.55);
         this.stoneGroup.add(winMesh);
       }
     } else if (stone.cutStage === 'full') {
-      // 依照玩家畫出的切割角度 (cutAngle) 與偏移比例 (centerOffset) 呈現雙切面
       this.targetRotY = 0;
       this.stoneGroup.rotation.set(0, 0, 0);
 
       const sliceContainer = new THREE.Group();
-      sliceContainer.rotation.z = -cutAngle; // 套用玩家畫線的角度
+      sliceContainer.rotation.z = -cutAngle;
 
-      // 若玩家切在邊緣，兩半比例一大一小 (例如 1.25 vs 0.72)
       const ratioA = 1 + centerOffset * 0.28;
       const ratioB = Math.max(0.58, 1 - centerOffset * 0.42);
-      const faceRadiusB = Math.max(0.75, 1.12 * (1 - centerOffset * 0.28));
+      const faceRadiusB = Math.max(0.75, 1.1 * (1 - centerOffset * 0.28));
 
       [
-        { offsetX: -1.05, scaleX: ratioA, faceR: 1.12, dir: 1 },
-        { offsetX: 1.05, scaleX: ratioB, faceR: faceRadiusB, dir: -1 }
+        { offsetX: -1.02, scaleX: ratioA, faceR: 1.1, dir: 1 },
+        { offsetX: 1.02, scaleX: ratioB, faceR: faceRadiusB, dir: -1 }
       ].forEach((cfg) => {
         const halfGroup = new THREE.Group();
         halfGroup.position.x = cfg.offsetX;
         halfGroup.rotation.y = cfg.dir * 0.34;
 
-        const outerGeo = new THREE.SphereGeometry(1.18, 7, 5, 0, Math.PI);
+        const outerGeo = new THREE.SphereGeometry(1.15, 7, 5, 0, Math.PI);
         const outerMesh = new THREE.Mesh(outerGeo, skinMat);
         outerMesh.rotation.y = cfg.dir * (Math.PI / 2);
         outerMesh.scale.set(1, 1, cfg.scaleX);
-        outerMesh.castShadow = true;
         halfGroup.add(outerMesh);
 
         const faceGeo = new THREE.CylinderGeometry(cfg.faceR, cfg.faceR, 0.14, 7);
@@ -1602,7 +1330,7 @@ const Workshop3D = {
     }
   },
 
-  spawnSparks(colorHex = 0xfde047, count = 28) {
+  spawnSparks(colorHex = 0xfde047, count = 20) {
     if (!JuiceConfig.enabled || JuiceConfig.particles <= 0) return;
     const total = Math.round(count * JuiceConfig.particles);
     const geo = new THREE.OctahedronGeometry(0.07, 0);
@@ -1610,11 +1338,11 @@ const Workshop3D = {
 
     for (let i = 0; i < total; i++) {
       const p = new THREE.Mesh(geo, mat);
-      p.position.set((Math.random() - 0.5) * 0.6, 0.2, 0.4);
+      p.position.set((Math.random() - 0.5) * 0.5, 0.2, 0.4);
       const vel = new THREE.Vector3(
-        (Math.random() - 0.5) * 0.16,
-        0.06 + Math.random() * 0.14,
-        0.04 + Math.random() * 0.12
+        (Math.random() - 0.5) * 0.15,
+        0.06 + Math.random() * 0.12,
+        0.04 + Math.random() * 0.1
       );
       this.scene.add(p);
       this.particles.push({ mesh: p, vel, life: 1.0 });
@@ -1623,20 +1351,21 @@ const Workshop3D = {
 
   loop() {
     requestAnimationFrame(() => this.loop());
+    // 若不在切石工坊分頁，直接跳過 3D 渲染節省 100% GPU 資源
+    if (document.getElementById('view-workshop').classList.contains('hidden')) return;
     if (!this.renderer || !this.scene || !this.camera) return;
 
-    // 只有在「旋轉鑑賞模式」或已經「切開」時才自動微轉
     if (!this.isDragging && (CutLineDrawer.mode === 'rotate' || (state.activeStone && state.activeStone.cutStage === 'full'))) {
-      this.targetRotY += 0.004;
+      this.targetRotY += 0.005;
     }
-    this.stoneGroup.rotation.y += (this.targetRotY - this.stoneGroup.rotation.y) * 0.12;
-    this.stoneGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.14);
+    this.stoneGroup.rotation.y += (this.targetRotY - this.stoneGroup.rotation.y) * 0.14;
+    this.stoneGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.16);
 
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const pt = this.particles[i];
       pt.mesh.position.add(pt.vel);
-      pt.vel.y -= 0.006;
-      pt.life -= 0.028;
+      pt.vel.y -= 0.007;
+      pt.life -= 0.035;
       pt.mesh.scale.setScalar(Math.max(0.01, pt.life));
       if (pt.life <= 0) {
         this.scene.remove(pt.mesh);
@@ -1686,7 +1415,6 @@ let state = {
 window.enterGame = () => {
   AudioFX.playClick();
   document.getElementById('entry-menu').classList.add('menu-exit');
-  document.getElementById('game-shell').classList.add('active');
 };
 
 window.returnToMenu = () => {
@@ -1706,7 +1434,7 @@ function animateNumberPop(elId, newText) {
 }
 
 function loadState() {
-  const saved = localStorage.getItem('jade_game_3d_line_v1');
+  const saved = localStorage.getItem('jade_game_3d_fast_v1');
   if (saved) {
     try { state = Object.assign(state, JSON.parse(saved)); } catch (e) {}
   }
@@ -1715,12 +1443,12 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('jade_game_3d_line_v1', JSON.stringify(state));
+  localStorage.setItem('jade_game_3d_fast_v1', JSON.stringify(state));
 }
 
 window.resetGame = () => {
   if (!confirm('確定要清空資金與珍寶閣紀錄重新開始嗎？')) return;
-  localStorage.removeItem('jade_game_3d_line_v1');
+  localStorage.removeItem('jade_game_3d_fast_v1');
   state = { money: 50000, rep: 100, day: 1, market: [], activeStone: null, collection: [], trend: TRENDS[0], logs: [] };
   generateMarket();
   addLog('你帶著 $50,000 本金踏入緬甸翡翠公盤，傳奇就此開始。');
@@ -1874,28 +1602,27 @@ window.performCut = (mode, e) => {
     s.cutStage = 'window';
     if (e) spawnFloatingText('-$800', e.clientX, e.clientY, '#fbbf24');
   } else {
-    // 檢查玩家是否已經畫線
     if (!CutLineDrawer.hasValidLine) {
       AudioFX.playFail();
-      triggerShake(0.6);
+      triggerShake(0.5);
       setWorkshopMode('draw');
       document.getElementById('canvas-hint').textContent = '⚠️ 請先在 3D 原石上按住拖曳畫出一道「紅色切割線」再下刀！';
       return;
     }
     s.cutStage = 'full';
     s.cutAngle = CutLineDrawer.cutAngle;
-    // 畫線越靠近原石核心，取料越完整 (最高 1.15 倍加成，偏邊緣最低 0.80 倍)
     s.cutPrecisionMult = +(1.15 - CutLineDrawer.centerOffset * 0.35).toFixed(2);
   }
 
   AudioFX.playSaw();
-  triggerShake(mode === 'full' ? 1.4 : 0.7);
+  triggerShake(mode === 'full' ? 1.2 : 0.6);
   if (Workshop3D.stoneGroup) {
-    Workshop3D.stoneGroup.scale.set(1.22, 0.78, 1.22);
-    Workshop3D.spawnSparks(0xfde047, mode === 'full' ? 36 : 18);
+    Workshop3D.stoneGroup.scale.set(1.2, 0.8, 1.2);
+    Workshop3D.spawnSparks(0xfde047, mode === 'full' ? 24 : 12);
   }
 
   setTimeout(() => {
+    const offset = CutLineDrawer.centerOffset || 0;
     CutLineDrawer.clear();
     if (mode === 'full') {
       document.getElementById('tool-mode-bar').classList.add('hidden');
@@ -1903,27 +1630,27 @@ window.performCut = (mode, e) => {
       document.getElementById('canvas-hint').textContent = '✨ 已沿你的紅線一刀切開！可欣賞雙面切口';
     }
 
-    Workshop3D.buildStone(s, s.cutAngle || 0, CutLineDrawer.centerOffset || 0);
+    Workshop3D.buildStone(s, s.cutAngle || 0, offset);
     if (Workshop3D.stoneGroup) {
-      Workshop3D.stoneGroup.scale.set(0.84, 1.18, 0.84);
+      Workshop3D.stoneGroup.scale.set(0.86, 1.15, 0.86);
     }
 
     const isGood = s.trueGrade.id !== '垮料';
     if (isGood) {
       AudioFX.playSuccess();
-      triggerFlash('rgba(46, 204, 113, 0.75)');
-      Workshop3D.spawnSparks(0x34d399, 45);
+      triggerFlash('rgba(46, 204, 113, 0.65)');
+      Workshop3D.spawnSparks(0x34d399, 28);
       showStageBanner(`✨ 大漲！切出【${s.trueGrade.name}】！`, 'win');
     } else {
       AudioFX.playFail();
-      triggerFlash('rgba(231, 76, 60, 0.5)');
+      triggerFlash('rgba(231, 76, 60, 0.45)');
       showStageBanner(`💥 切垮了…【${s.trueGrade.name}】`, 'loss');
     }
 
     renderWorkshopResult();
     saveState();
     renderHeader();
-  }, 380);
+  }, 300);
 };
 
 function calculateValuation(stone) {
@@ -1997,7 +1724,7 @@ window.sellToBuyer = (price, buyerName, e) => {
 
   if (profit >= 0) {
     AudioFX.playSuccess();
-    triggerFlash('rgba(232, 199, 123, 0.5)');
+    triggerFlash('rgba(232, 199, 123, 0.45)');
     const repGain = Math.max(5, Math.round(profit / 1500));
     state.rep += repGain;
     showStageBanner(`💰 成交大賺 +$${profit.toLocaleString()}！`, 'win');
@@ -2019,7 +1746,7 @@ window.keepInCollection = (e) => {
   const s = state.activeStone;
   if (!s || s.cutStage !== 'full') return;
   AudioFX.playSuccess();
-  triggerFlash('rgba(46, 204, 113, 0.6)');
+  triggerFlash('rgba(46, 204, 113, 0.55)');
   const repGain = s.trueGrade.id === '帝王綠' ? 80 : s.trueGrade.id === '高冰種' ? 40 : 15;
   state.rep += repGain;
   if (e) spawnFloatingText(`聲望 +${repGain}`, e.clientX, e.clientY, '#e8c77b');
@@ -2075,10 +1802,10 @@ function renderMarket() {
     const svgPoints = s.points.map(p => `${p.x},${p.y}`).join(' ');
     const clues = [s.lightClue, s.loupeClue].filter(Boolean).join('<br>') || '尚未鑑定，皮殼表現：' + s.origin.trait;
     return `
-      <div class="stone-card" style="animation-delay:${idx * 0.05}s;">
+      <div class="stone-card">
         <span class="stone-tag">${s.origin.skin}</span>
         <div class="stone-preview">
-          <svg width="115" height="105" viewBox="0 0 120 110">
+          <svg width="110" height="100" viewBox="0 0 120 110">
             <polygon points="${svgPoints}" fill="${s.origin.color}" stroke="#c6a15b" stroke-width="2"/>
             <circle cx="52" cy="48" r="4" fill="rgba(46,204,113,0.4)"/>
           </svg>
@@ -2145,7 +1872,7 @@ function renderCollection() {
   }
   grid.innerHTML = state.collection.map(item => `
     <div class="treasure-item">
-      <div class="treasure-orb" style="background: radial-gradient(circle at 30% 30%, ${item.grade.glow}, ${item.grade.color}); box-shadow: 0 0 18px ${item.grade.glow};"></div>
+      <div class="treasure-orb" style="background: radial-gradient(circle at 30% 30%, ${item.grade.glow}, ${item.grade.color});"></div>
       <div style="font-weight:bold; color:var(--gold-text); font-size:0.9rem; margin-bottom:4px;">${item.name}</div>
       <div style="font-size:0.78rem; color:var(--text-muted);">估值：$${item.val.toLocaleString()}</div>
     </div>
@@ -2165,7 +1892,6 @@ function renderAll() {
   renderLogs();
 }
 
-// GitHub 部署 Modal
 window.openGithubModal = () => {
   AudioFX.playClick();
   document.getElementById('github-modal').style.display = 'flex';
@@ -2184,12 +1910,10 @@ window.copyFullSource = () => {
   });
 };
 
-// 啟動 3D 場景、畫線模組與存檔
-initBackground3D();
 CutLineDrawer.init();
 loadState();
 if (state.logs.length === 0) {
-  addLog('歡迎來到《翡翠神眼 3D 公盤》，在原石上親手畫線下刀吧！');
+  addLog('歡迎來到《翡翠神眼 3D 公盤》，流暢優化版已就緒！');
 }
 </script>
 </body>
