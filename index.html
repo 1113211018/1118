@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>翡翠神眼 · 3D Low Poly 賭石切玉</title>
+<title>翡翠神眼 · 3D Low Poly 畫線賭石切玉</title>
 <style>
   :root {
     --bg-dark: #0a0f0d;
@@ -207,7 +207,6 @@
     transform: translateY(0);
   }
 
-  /* 所有按鈕統一物理按壓回饋 (不延遲操作) */
   button {
     transition: transform 0.14s var(--ease-bounce), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   }
@@ -543,12 +542,39 @@
     background: linear-gradient(135deg, #d4a64f, #9e742b);
   }
 
-  /* 3D 切石工坊舞台 */
+  /* 3D 切石工坊舞台 + 畫線疊加層 */
   .workshop-stage {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 14px;
+  }
+
+  .tool-mode-bar {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 620px;
+    justify-content: center;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: #1b2823;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .mode-btn.active {
+    background: linear-gradient(135deg, #2b453b, #1a2e26);
+    border-color: var(--gold-text);
+    color: var(--gold-text);
+    box-shadow: 0 0 12px rgba(232, 199, 123, 0.25);
   }
 
   .canvas-wrapper {
@@ -561,29 +587,45 @@
     border-radius: 12px;
     overflow: hidden;
     box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.85), 0 8px 24px rgba(0, 0, 0, 0.5);
+    touch-action: none;
   }
 
   #workshop3dCanvas {
     width: 100%;
     height: 100%;
     display: block;
+  }
+
+  #drawLineCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    cursor: crosshair;
+  }
+
+  #drawLineCanvas.rotate-cursor {
     cursor: grab;
   }
 
-  #workshop3dCanvas:active {
+  #drawLineCanvas.rotate-cursor:active {
     cursor: grabbing;
   }
 
   .canvas-hint {
     position: absolute;
     bottom: 8px;
+    left: 12px;
     right: 12px;
-    font-size: 0.74rem;
-    color: rgba(232, 199, 123, 0.75);
-    background: rgba(0, 0, 0, 0.5);
-    padding: 3px 8px;
-    border-radius: 4px;
+    text-align: center;
+    font-size: 0.78rem;
+    color: #fde68a;
+    background: rgba(0, 0, 0, 0.62);
+    padding: 5px 10px;
+    border-radius: 6px;
     pointer-events: none;
+    z-index: 6;
   }
 
   .cut-controls {
@@ -801,7 +843,7 @@
 <div id="entry-menu">
   <div class="entry-emblem menu-stagger-1">翠</div>
   <h1 class="entry-title menu-stagger-2">翡翠神眼 · 3D 公盤</h1>
-  <p class="entry-sub menu-stagger-3">LOW POLY 沉浸式賭石切玉模擬器</p>
+  <p class="entry-sub menu-stagger-3">LOW POLY 畫線賭石切玉模擬器</p>
   <button class="btn-start-game menu-stagger-4" onclick="enterGame()">進入緬甸公盤</button>
 </div>
 
@@ -840,7 +882,7 @@
       <div class="brand-badge">翠</div>
       <div>
         <h1>翡翠神眼 · 賭石切玉</h1>
-        <span>一刀窮 · 一刀富 · 一刀穿麻布</span>
+        <span>一刀窮 · 一刀富 · 親手畫線定乾坤</span>
       </div>
     </div>
 
@@ -889,17 +931,25 @@
             <span id="ws-cost-badge" class="stat-pill" style="font-size:0.84rem;"></span>
           </div>
 
+          <!-- 工具模式切換列：畫線 vs 旋轉 -->
+          <div class="tool-mode-bar" id="tool-mode-bar">
+            <button class="mode-btn active" id="mode-draw" onclick="setWorkshopMode('draw')">🖍️ 畫線下刀模式</button>
+            <button class="mode-btn" id="mode-rotate" onclick="setWorkshopMode('rotate')">🔄 360° 旋轉鑑賞</button>
+            <button class="action-btn" style="flex:none; padding:8px 12px;" onclick="clearCutLine()">清除重畫</button>
+          </div>
+
           <div class="canvas-wrapper">
             <canvas id="workshop3dCanvas"></canvas>
-            <div class="canvas-hint">🖱️ 左右拖曳可 360° 旋轉鑑賞 Low Poly 原石與切面</div>
+            <canvas id="drawLineCanvas"></canvas>
+            <div class="canvas-hint" id="canvas-hint">🖍️ 請在原石上按住拖曳畫出一道「紅色切割線」，決定下刀角度與位置！</div>
           </div>
 
           <div class="cut-controls" id="cut-buttons">
             <button class="btn-cut-window" onclick="performCut('window', event)">
               🪚 磨皮擦石（開窗）<br><small style="font-weight:normal; opacity:0.85;">風險低 · 可先賣半明料 ($800)</small>
             </button>
-            <button class="btn-cut-full" onclick="performCut('full', event)">
-              ⚡ 霸王一刀切（全切）<br><small style="font-weight:normal; opacity:0.85;">直接見真章 · 釋放全部價值</small>
+            <button class="btn-cut-full" id="btn-cut-line" onclick="performCut('full', event)">
+              ⚡ 沿紅線一刀切開！<br><small style="font-weight:normal; opacity:0.85;">先畫線決定下刀方位 · 釋放價值</small>
             </button>
           </div>
 
@@ -911,7 +961,7 @@
             <div class="offers-grid" id="offers-grid"></div>
 
             <div style="margin-top:14px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-              <button id="btn-continue-cut" class="btn-cut-full hidden" onclick="performCut('full', event)">🔥 繼續全切博大漲！</button>
+              <button id="btn-continue-cut" class="btn-cut-full hidden" onclick="prepareCutAfterWindow()">🔥 畫線一刀全切博大漲！</button>
               <button id="btn-keep-treasure" class="action-btn" style="flex:none; padding:9px 16px; border-color:var(--gold-text); color:var(--gold-text);" onclick="keepInCollection(event)">🏛️ 收入私人珍寶閣</button>
             </div>
           </div>
@@ -951,9 +1001,9 @@
 <div class="modal-backdrop" id="github-modal">
   <div class="modal-box">
     <h3>🚀 一鍵部署到 GitHub Pages</h3>
-    <p>本遊戲已整合 Three.js Low Poly 3D 場景與 Game Juice 系統，為純前端單檔架構：</p>
+    <p>本遊戲已整合 Three.js Low Poly 3D 場景、親手畫線切石與 Game Juice 系統，為純前端單檔架構：</p>
     <ol>
-      <li>在 GitHub 建立一個新的公開 Repository（例如 <code>jade-3d-game</code>）。</li>
+      <li>在 GitHub 建立一個新的公開 Repository（例如 <code>jade-3d-cut-game</code>）。</li>
       <li>點擊下方<strong>「複製完整 HTML 原始碼」</strong>，建立 <code>index.html</code> 並貼上儲存。</li>
       <li>前往倉庫的 <strong>Settings → Pages</strong>，選擇 <code>main</code> 分支並儲存即可上線！</li>
     </ol>
@@ -1002,7 +1052,6 @@ window.updateJuiceConfig = () => {
   JuiceConfig.sound = document.getElementById('juice-sound').checked;
 };
 
-// Game Juice 觸發器
 function triggerFlash(color = 'rgba(255,255,255,0.65)') {
   if (!JuiceConfig.enabled || !JuiceConfig.flash) return;
   const el = document.getElementById('screen-flash');
@@ -1063,6 +1112,22 @@ const AudioFX = {
     gain.connect(this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.07);
+  },
+  playChalk() {
+    if (!JuiceConfig.enabled || !JuiceConfig.sound) return;
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(920, now);
+    osc.frequency.exponentialRampToValueAtTime(520, now + 0.04);
+    gain.gain.setValueAtTime(0.03, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.05);
   },
   playSaw() {
     if (!JuiceConfig.enabled || !JuiceConfig.sound) return;
@@ -1133,7 +1198,6 @@ function initBackground3D() {
   camera.position.set(0, 7, 18);
   camera.lookAt(0, 1, 0);
 
-  // 柔和環境光 + 陰影主光 + 翡翠輪廓光 (Rim Light)
   const hemiLight = new THREE.HemisphereLight(0x88c9a1, 0x101814, 0.7);
   scene.add(hemiLight);
 
@@ -1147,7 +1211,6 @@ function initBackground3D() {
   rimLight.position.set(-7, 5, -6);
   scene.add(rimLight);
 
-  // Low Poly 緬甸山巒與漂浮原石群
   const terrainGeo = new THREE.PlaneGeometry(60, 60, 24, 24);
   terrainGeo.rotateX(-Math.PI / 2);
   const pos = terrainGeo.attributes.position;
@@ -1168,19 +1231,9 @@ function initBackground3D() {
   terrain.receiveShadow = true;
   scene.add(terrain);
 
-  // 漂浮 Low Poly 翡翠原石裝飾
   const floatStones = [];
-  const rockMat = new THREE.MeshStandardMaterial({
-    color: 0x2a3b34,
-    roughness: 0.75,
-    flatShading: true
-  });
-  const jadeMat = new THREE.MeshStandardMaterial({
-    color: 0x10b981,
-    emissive: 0x064e3b,
-    roughness: 0.25,
-    flatShading: true
-  });
+  const rockMat = new THREE.MeshStandardMaterial({ color: 0x2a3b34, roughness: 0.75, flatShading: true });
+  const jadeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x064e3b, roughness: 0.25, flatShading: true });
 
   for (let i = 0; i < 16; i++) {
     const geo = new THREE.DodecahedronGeometry(0.45 + Math.random() * 0.75, 0);
@@ -1193,14 +1246,9 @@ function initBackground3D() {
     floatStones.push({ mesh, speed: 0.3 + Math.random() * 0.5, baseY: mesh.position.y, phase: Math.random() * 6.28 });
   }
 
-  // 景深效果 (BokehPass)
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bokehPass = new BokehPass(scene, camera, {
-    focus: 17.5,
-    aperture: 0.00018,
-    maxblur: 0.006
-  });
+  const bokehPass = new BokehPass(scene, camera, { focus: 17.5, aperture: 0.00018, maxblur: 0.006 });
   composer.addPass(bokehPass);
 
   window.addEventListener('resize', () => {
@@ -1226,7 +1274,187 @@ function initBackground3D() {
   animateBg();
 }
 
-// ==================== 2. Three.js Low Poly 切石工坊 3D 舞台 ====================
+// ==================== 2. 畫線互動層與 3D Low Poly 切石工坊 ====================
+const CutLineDrawer = {
+  canvas: null,
+  ctx: null,
+  mode: 'draw', // 'draw' | 'rotate'
+  isPointerDown: false,
+  points: [],
+  hasValidLine: false,
+  cutAngle: 0,     // 畫線斜率角度 (弧度)
+  centerOffset: 0, // 切線距離原石中心的偏移程度 (0 = 正中央, 1 = 邊緣)
+
+  init() {
+    this.canvas = document.getElementById('drawLineCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+
+    this.canvas.addEventListener('pointerdown', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.isPointerDown = true;
+
+      if (this.mode === 'rotate') {
+        Workshop3D.isDragging = true;
+        Workshop3D.prevX = e.clientX;
+      } else {
+        // 開始畫新切割線
+        this.points = [{ x, y }];
+        this.hasValidLine = false;
+        this.renderLine();
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!this.isPointerDown) return;
+      if (this.mode === 'rotate') {
+        const dx = e.clientX - Workshop3D.prevX;
+        Workshop3D.prevX = e.clientX;
+        Workshop3D.targetRotY += dx * 0.012;
+      } else {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+        const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+        const last = this.points[this.points.length - 1];
+        if (last && Math.hypot(x - last.x, y - last.y) > 4) {
+          this.points.push({ x, y });
+          if (this.points.length % 4 === 0) AudioFX.playChalk();
+          this.renderLine();
+        }
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!this.isPointerDown) return;
+      this.isPointerDown = false;
+      Workshop3D.isDragging = false;
+
+      if (this.mode === 'draw' && this.points.length >= 2) {
+        const p1 = this.points[0];
+        const p2 = this.points[this.points.length - 1];
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        if (dist >= 55) {
+          this.hasValidLine = true;
+          // 計算切割線角度 (相對於垂直線的偏角)
+          this.cutAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x) - Math.PI / 2;
+
+          // 計算切線中點距離畫布原石中心的偏移程度
+          const cx = this.canvas.width / 2;
+          const cy = this.canvas.height / 2;
+          const midX = (p1.x + p2.x) / 2;
+          const midY = (p1.y + p2.y) / 2;
+          const distFromCenter = Math.hypot(midX - cx, midY - cy);
+          this.centerOffset = Math.min(1, distFromCenter / 115);
+
+          this.renderLine();
+          const qualityHint = this.centerOffset < 0.35
+            ? '🎯 切線精準貫穿原石核心（滿肉取料，估值加成！）'
+            : this.centerOffset < 0.7
+              ? '✂️ 切線角度適中，可點擊下方「沿紅線一刀切開」'
+              : '⚠️ 切線偏離中心較遠（擦邊切，取肉體積較小）';
+          document.getElementById('canvas-hint').textContent = qualityHint;
+        } else {
+          this.clear();
+          document.getElementById('canvas-hint').textContent = '⚠️ 畫線太短啦！請從原石一側劃穿到另一側。';
+        }
+      }
+    });
+  },
+
+  resize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.parentElement.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      this.canvas.width = rect.width;
+      this.canvas.height = rect.height;
+      this.renderLine();
+    }
+  },
+
+  clear() {
+    this.points = [];
+    this.hasValidLine = false;
+    this.cutAngle = 0;
+    this.centerOffset = 0;
+    if (this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  },
+
+  renderLine() {
+    if (!this.ctx) return;
+    const { width, height } = this.canvas;
+    this.ctx.clearRect(0, 0, width, height);
+    if (this.points.length < 2) return;
+
+    const p1 = this.points[0];
+    const p2 = this.points[this.points.length - 1];
+
+    // 繪製玩家手繪軌跡
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1.x, p1.y);
+    for (let i = 1; i < this.points.length; i++) {
+      this.ctx.lineTo(this.points[i].x, this.points[i].y);
+    }
+    this.ctx.strokeStyle = 'rgba(248, 113, 113, 0.5)';
+    this.ctx.lineWidth = 4;
+    this.ctx.lineCap = 'round';
+    this.ctx.stroke();
+
+    // 繪製校準後的筆直油切鋸線 (紅白虛線 + 兩端準星)
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1.x, p1.y);
+    this.ctx.lineTo(p2.x, p2.y);
+    this.ctx.strokeStyle = '#ef4444';
+    this.ctx.lineWidth = 3;
+    this.ctx.setLineDash([10, 6]);
+    this.ctx.shadowColor = '#ef4444';
+    this.ctx.shadowBlur = 12;
+    this.ctx.stroke();
+
+    // 兩端進刀點標記
+    [p1, p2].forEach(pt => {
+      this.ctx.setLineDash([]);
+      this.ctx.beginPath();
+      this.ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#fde047';
+      this.ctx.fill();
+    });
+    this.ctx.restore();
+  }
+};
+
+window.setWorkshopMode = (mode) => {
+  AudioFX.playClick();
+  CutLineDrawer.mode = mode;
+  document.getElementById('mode-draw').classList.toggle('active', mode === 'draw');
+  document.getElementById('mode-rotate').classList.toggle('active', mode === 'rotate');
+  const drawCanvas = document.getElementById('drawLineCanvas');
+  drawCanvas.classList.toggle('rotate-cursor', mode === 'rotate');
+
+  document.getElementById('canvas-hint').textContent = mode === 'draw'
+    ? '🖍️ 請在原石上按住拖曳畫出一道「紅色切割線」，決定下刀角度與位置！'
+    : '🖱️ 左右拖曳可 360° 旋轉觀察原石皮殼，選好面後切換回「畫線下刀模式」';
+};
+
+window.clearCutLine = () => {
+  AudioFX.playClick();
+  CutLineDrawer.clear();
+  document.getElementById('canvas-hint').textContent = '🖍️ 已清除紅線，請重新在原石上畫出切割線！';
+};
+
+window.prepareCutAfterWindow = () => {
+  AudioFX.playClick();
+  document.getElementById('result-panel').classList.add('hidden');
+  document.getElementById('cut-buttons').classList.remove('hidden');
+  document.getElementById('tool-mode-bar').classList.remove('hidden');
+  document.getElementById('drawLineCanvas').classList.remove('hidden');
+  CutLineDrawer.clear();
+  setWorkshopMode('draw');
+};
+
 const Workshop3D = {
   scene: null,
   camera: null,
@@ -1236,7 +1464,6 @@ const Workshop3D = {
   targetRotY: 0,
   isDragging: false,
   prevX: 0,
-  cutAnimProgress: 0,
 
   init() {
     const canvas = document.getElementById('workshop3dCanvas');
@@ -1254,7 +1481,6 @@ const Workshop3D = {
     this.camera.position.set(0, 2.6, 6.2);
     this.camera.lookAt(0, 0.3, 0);
 
-    // 柔和主光 + 陰影
     const ambient = new THREE.AmbientLight(0xdff5e8, 0.55);
     this.scene.add(ambient);
 
@@ -1263,12 +1489,10 @@ const Workshop3D = {
     keyLight.castShadow = true;
     this.scene.add(keyLight);
 
-    // 輪廓光 (Rim Light) 勾勒 Low Poly 原石稜角
     const rimLight = new THREE.DirectionalLight(0x34d399, 2.2);
     rimLight.position.set(-4, 3, -5);
     this.scene.add(rimLight);
 
-    // Low Poly 切石機工作台底座
     const tableGeo = new THREE.CylinderGeometry(2.5, 2.8, 0.4, 8);
     const tableMat = new THREE.MeshStandardMaterial({
       color: 0x1c2824,
@@ -1284,29 +1508,15 @@ const Workshop3D = {
     this.stoneGroup = new THREE.Group();
     this.scene.add(this.stoneGroup);
 
-    // 滑鼠拖曳旋轉
-    canvas.addEventListener('pointerdown', (e) => {
-      this.isDragging = true;
-      this.prevX = e.clientX;
-    });
-    window.addEventListener('pointermove', (e) => {
-      if (!this.isDragging) return;
-      const dx = e.clientX - this.prevX;
-      this.prevX = e.clientX;
-      this.targetRotY += dx * 0.012;
-    });
-    window.addEventListener('pointerup', () => { this.isDragging = false; });
-
     this.loop();
   },
 
-  buildStone(stone) {
+  buildStone(stone, cutAngle = 0, centerOffset = 0) {
     if (!this.scene) this.init();
     while (this.stoneGroup.children.length > 0) {
       this.stoneGroup.remove(this.stoneGroup.children[0]);
     }
-    this.targetRotY = 0;
-    this.stoneGroup.rotation.set(0, 0, 0);
+    this.stoneGroup.rotation.set(0, this.targetRotY, 0);
 
     const skinColor = new THREE.Color(stone.origin.color);
     const jadeColor = new THREE.Color(stone.trueGrade.color);
@@ -1329,7 +1539,6 @@ const Workshop3D = {
     });
 
     if (stone.cutStage === 'raw' || stone.cutStage === 'window') {
-      // Low Poly 原石主體
       const geo = new THREE.IcosahedronGeometry(1.25, 1);
       const pos = geo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
@@ -1345,7 +1554,6 @@ const Workshop3D = {
       rockMesh.receiveShadow = true;
       this.stoneGroup.add(rockMesh);
 
-      // 若已擦石開窗，鑲嵌發光翡翠天窗
       if (stone.cutStage === 'window') {
         const winGeo = new THREE.DodecahedronGeometry(0.68, 0);
         const winMesh = new THREE.Mesh(winGeo, jadeMat);
@@ -1354,28 +1562,43 @@ const Workshop3D = {
         this.stoneGroup.add(winMesh);
       }
     } else if (stone.cutStage === 'full') {
-      // 一刀切開：左右對稱雙半塊原石 + 內部發光玉肉切面
-      [-1.05, 1.05].forEach((offsetX, idx) => {
-        const halfGroup = new THREE.Group();
-        halfGroup.position.x = offsetX;
-        halfGroup.rotation.y = idx === 0 ? 0.35 : -0.35;
+      // 依照玩家畫出的切割角度 (cutAngle) 與偏移比例 (centerOffset) 呈現雙切面
+      this.targetRotY = 0;
+      this.stoneGroup.rotation.set(0, 0, 0);
 
-        // 外皮半球
+      const sliceContainer = new THREE.Group();
+      sliceContainer.rotation.z = -cutAngle; // 套用玩家畫線的角度
+
+      // 若玩家切在邊緣，兩半比例一大一小 (例如 1.25 vs 0.72)
+      const ratioA = 1 + centerOffset * 0.28;
+      const ratioB = Math.max(0.58, 1 - centerOffset * 0.42);
+      const faceRadiusB = Math.max(0.75, 1.12 * (1 - centerOffset * 0.28));
+
+      [
+        { offsetX: -1.05, scaleX: ratioA, faceR: 1.12, dir: 1 },
+        { offsetX: 1.05, scaleX: ratioB, faceR: faceRadiusB, dir: -1 }
+      ].forEach((cfg) => {
+        const halfGroup = new THREE.Group();
+        halfGroup.position.x = cfg.offsetX;
+        halfGroup.rotation.y = cfg.dir * 0.34;
+
         const outerGeo = new THREE.SphereGeometry(1.18, 7, 5, 0, Math.PI);
         const outerMesh = new THREE.Mesh(outerGeo, skinMat);
-        outerMesh.rotation.y = idx === 0 ? Math.PI / 2 : -Math.PI / 2;
+        outerMesh.rotation.y = cfg.dir * (Math.PI / 2);
+        outerMesh.scale.set(1, 1, cfg.scaleX);
         outerMesh.castShadow = true;
         halfGroup.add(outerMesh);
 
-        // 切面玉肉圓盤
-        const faceGeo = new THREE.CylinderGeometry(1.12, 1.12, 0.14, 7);
+        const faceGeo = new THREE.CylinderGeometry(cfg.faceR, cfg.faceR, 0.14, 7);
         faceGeo.rotateZ(Math.PI / 2);
         const faceMesh = new THREE.Mesh(faceGeo, jadeMat);
-        faceMesh.position.x = idx === 0 ? 0.04 : -0.04;
+        faceMesh.position.x = cfg.dir * 0.04;
         halfGroup.add(faceMesh);
 
-        this.stoneGroup.add(halfGroup);
+        sliceContainer.add(halfGroup);
       });
+
+      this.stoneGroup.add(sliceContainer);
     }
   },
 
@@ -1402,15 +1625,13 @@ const Workshop3D = {
     requestAnimationFrame(() => this.loop());
     if (!this.renderer || !this.scene || !this.camera) return;
 
-    if (!this.isDragging) {
+    // 只有在「旋轉鑑賞模式」或已經「切開」時才自動微轉
+    if (!this.isDragging && (CutLineDrawer.mode === 'rotate' || (state.activeStone && state.activeStone.cutStage === 'full'))) {
       this.targetRotY += 0.004;
     }
-    this.stoneGroup.rotation.y += (this.targetRotY - this.stoneGroup.rotation.y) * 0.1;
-
-    // 動作伸縮回彈 (Squash & Stretch)
+    this.stoneGroup.rotation.y += (this.targetRotY - this.stoneGroup.rotation.y) * 0.12;
     this.stoneGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.14);
 
-    // 更新 3D 火花與翡翠碎屑粒子
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const pt = this.particles[i];
       pt.mesh.position.add(pt.vel);
@@ -1427,7 +1648,7 @@ const Workshop3D = {
   }
 };
 
-// ==================== 遊戲核心邏輯 (保留原始玩法) ====================
+// ==================== 遊戲核心邏輯 ====================
 const ORIGINS = [
   { name: '莫西沙場口', skin: '老象皮灰砂', trait: '常出高冰玻璃種，剛性足', color: '#5c635e', bonusHigh: 1.25 },
   { name: '木那場口', skin: '白鹽砂皮', trait: '點點雪花棉，內化機率極高', color: '#9aa199', bonusHigh: 1.15 },
@@ -1462,7 +1683,6 @@ let state = {
   logs: []
 };
 
-// 入口選單過場控制
 window.enterGame = () => {
   AudioFX.playClick();
   document.getElementById('entry-menu').classList.add('menu-exit');
@@ -1486,7 +1706,7 @@ function animateNumberPop(elId, newText) {
 }
 
 function loadState() {
-  const saved = localStorage.getItem('jade_game_3d_v1');
+  const saved = localStorage.getItem('jade_game_3d_line_v1');
   if (saved) {
     try { state = Object.assign(state, JSON.parse(saved)); } catch (e) {}
   }
@@ -1495,12 +1715,12 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('jade_game_3d_v1', JSON.stringify(state));
+  localStorage.setItem('jade_game_3d_line_v1', JSON.stringify(state));
 }
 
 window.resetGame = () => {
   if (!confirm('確定要清空資金與珍寶閣紀錄重新開始嗎？')) return;
-  localStorage.removeItem('jade_game_3d_v1');
+  localStorage.removeItem('jade_game_3d_line_v1');
   state = { money: 50000, rep: 100, day: 1, market: [], activeStone: null, collection: [], trend: TRENDS[0], logs: [] };
   generateMarket();
   addLog('你帶著 $50,000 本金踏入緬甸翡翠公盤，傳奇就此開始。');
@@ -1562,6 +1782,8 @@ function generateStone(id) {
     lightClue: '',
     loupeClue: '',
     cutStage: 'raw',
+    cutAngle: 0,
+    cutPrecisionMult: 1.0,
     points
   };
 }
@@ -1652,20 +1874,38 @@ window.performCut = (mode, e) => {
     s.cutStage = 'window';
     if (e) spawnFloatingText('-$800', e.clientX, e.clientY, '#fbbf24');
   } else {
+    // 檢查玩家是否已經畫線
+    if (!CutLineDrawer.hasValidLine) {
+      AudioFX.playFail();
+      triggerShake(0.6);
+      setWorkshopMode('draw');
+      document.getElementById('canvas-hint').textContent = '⚠️ 請先在 3D 原石上按住拖曳畫出一道「紅色切割線」再下刀！';
+      return;
+    }
     s.cutStage = 'full';
+    s.cutAngle = CutLineDrawer.cutAngle;
+    // 畫線越靠近原石核心，取料越完整 (最高 1.15 倍加成，偏邊緣最低 0.80 倍)
+    s.cutPrecisionMult = +(1.15 - CutLineDrawer.centerOffset * 0.35).toFixed(2);
   }
 
   AudioFX.playSaw();
   triggerShake(mode === 'full' ? 1.4 : 0.7);
   if (Workshop3D.stoneGroup) {
-    Workshop3D.stoneGroup.scale.set(1.22, 0.78, 1.22); // 動作伸縮 (Squash)
+    Workshop3D.stoneGroup.scale.set(1.22, 0.78, 1.22);
     Workshop3D.spawnSparks(0xfde047, mode === 'full' ? 36 : 18);
   }
 
   setTimeout(() => {
-    Workshop3D.buildStone(s);
+    CutLineDrawer.clear();
+    if (mode === 'full') {
+      document.getElementById('tool-mode-bar').classList.add('hidden');
+      document.getElementById('drawLineCanvas').classList.add('hidden');
+      document.getElementById('canvas-hint').textContent = '✨ 已沿你的紅線一刀切開！可欣賞雙面切口';
+    }
+
+    Workshop3D.buildStone(s, s.cutAngle || 0, CutLineDrawer.centerOffset || 0);
     if (Workshop3D.stoneGroup) {
-      Workshop3D.stoneGroup.scale.set(0.84, 1.18, 0.84); // 彈開回彈 (Stretch)
+      Workshop3D.stoneGroup.scale.set(0.84, 1.18, 0.84);
     }
 
     const isGood = s.trueGrade.id !== '垮料';
@@ -1689,9 +1929,10 @@ window.performCut = (mode, e) => {
 function calculateValuation(stone) {
   const crackPenalty = stone.hasCrack ? 0.72 : 1.0;
   const stageMult = stone.cutStage === 'window' ? 0.62 : 1.0;
+  const precisionMult = stone.cutStage === 'full' ? (stone.cutPrecisionMult || 1.0) : 1.0;
   const repBonus = 1 + Math.min(0.35, (state.rep - 100) / 1000);
   const trendMult = state.trend.target.includes(stone.trueGrade.id) ? state.trend.mult : 1.0;
-  const baseVal = stone.price * stone.trueGrade.mult * crackPenalty * stageMult * repBonus * trendMult;
+  const baseVal = stone.price * stone.trueGrade.mult * crackPenalty * stageMult * precisionMult * repBonus * trendMult;
   return Math.max(200, Math.round(baseVal / 50) * 50);
 }
 
@@ -1710,13 +1951,18 @@ function renderWorkshopResult() {
     btnKeep.classList.add('hidden');
     document.getElementById('res-title').className = `result-grade grade-${s.trueGrade.id}`;
     document.getElementById('res-title').textContent = `✨ 開窗見綠：【${s.trueGrade.name}】！`;
-    document.getElementById('res-detail').textContent = `天窗處露出迷人玉質（${s.hasCrack ? '隱約帶裂' : '無明顯大裂'}）。可選擇賣出半明料，或繼續一刀切到底！`;
+    document.getElementById('res-detail').textContent = `天窗處露出迷人玉質（${s.hasCrack ? '隱約帶裂' : '無明顯大裂'}）。可選擇賣出半明料，或親手畫線一刀切到底！`;
   } else {
     btnContinue.classList.add('hidden');
     btnKeep.classList.toggle('hidden', s.trueGrade.id === '垮料');
+    const lineNote = (s.cutPrecisionMult || 1) >= 1.05
+      ? `（下刀精準取滿肉，取料加成 ×${s.cutPrecisionMult}！）`
+      : (s.cutPrecisionMult || 1) < 0.95
+        ? `（切線偏邊緣，取料係數 ×${s.cutPrecisionMult}）`
+        : '';
     document.getElementById('res-title').className = `result-grade grade-${s.trueGrade.id}`;
     document.getElementById('res-title').textContent = `🎊 全切揭曉：【${s.trueGrade.name}】`;
-    document.getElementById('res-detail').textContent = `${s.trueGrade.desc}${s.hasCrack ? '（內部帶有一道綹裂）' : '（整塊無裂，完美取件！）'}`;
+    document.getElementById('res-detail').textContent = `${s.trueGrade.desc}${s.hasCrack ? '（內部帶有一道綹裂）' : '（整塊無裂，完美取件！）'}${lineNote}`;
   }
 
   const estVal = calculateValuation(s);
@@ -1801,7 +2047,7 @@ window.switchTab = (tab) => {
 
   const titles = {
     market: '🏛️ 緬甸公盤原石市場',
-    workshop: '🪚 3D Low Poly 切石工坊',
+    workshop: '🪚 3D Low Poly 畫線切石工坊',
     collection: '👑 私人翡翠珍寶閣'
   };
   document.getElementById('main-panel-title').textContent = titles[tab];
@@ -1872,12 +2118,21 @@ function renderWorkshop() {
   document.getElementById('ws-stone-desc').textContent = `${s.origin.skin} · ${s.origin.trait}`;
   document.getElementById('ws-cost-badge').textContent = `已投入成本：$${s.totalCost.toLocaleString()}`;
 
-  Workshop3D.buildStone(s);
+  Workshop3D.buildStone(s, s.cutAngle || 0, 0);
+  CutLineDrawer.resize();
 
   if (s.cutStage === 'raw') {
     document.getElementById('cut-buttons').classList.remove('hidden');
+    document.getElementById('tool-mode-bar').classList.remove('hidden');
+    document.getElementById('drawLineCanvas').classList.remove('hidden');
     document.getElementById('result-panel').classList.add('hidden');
+    CutLineDrawer.clear();
+    setWorkshopMode('draw');
   } else {
+    if (s.cutStage === 'full') {
+      document.getElementById('tool-mode-bar').classList.add('hidden');
+      document.getElementById('drawLineCanvas').classList.add('hidden');
+    }
     renderWorkshopResult();
   }
 }
@@ -1929,11 +2184,12 @@ window.copyFullSource = () => {
   });
 };
 
-// 啟動 3D 場景與存檔
+// 啟動 3D 場景、畫線模組與存檔
 initBackground3D();
+CutLineDrawer.init();
 loadState();
 if (state.logs.length === 0) {
-  addLog('歡迎來到《翡翠神眼 3D 公盤》，祝你一刀暴富、開出帝王綠！');
+  addLog('歡迎來到《翡翠神眼 3D 公盤》，在原石上親手畫線下刀吧！');
 }
 </script>
 </body>
